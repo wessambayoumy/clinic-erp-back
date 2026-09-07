@@ -3,10 +3,6 @@ import { generateSecret } from './generate_secret';
 
 export default registerAs('auth', () => {
   const isProduction = process.env.NODE_ENV === 'production';
-
-
-console.log('JWT_ACCESS_SECRET:', process.env.JWT_ACCESS_SECRET);
-
   return {
     jwt: {
       accessSecret:

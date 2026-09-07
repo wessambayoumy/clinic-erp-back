@@ -8,7 +8,7 @@ import { LoggingInterceptor } from './common/http/interceptors/logging.intercept
 import { RequestIdMiddleware } from './common/http/middleware/request-id.middleware';
 
 async function bootstrap() {
-const logger = new Logger('Bootstrap');
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
@@ -21,11 +21,9 @@ const logger = new Logger('Bootstrap');
   app.setGlobalPrefix(apiPrefix);
   app.enableCors({ origin: corsOrigin });
 
-  await app.listen(port , () => {
+  await app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}/${apiPrefix}`);
-  })
-  
-
+  });
 
   // Request ID middleware
   app.use(RequestIdMiddleware);
@@ -67,7 +65,6 @@ const logger = new Logger('Bootstrap');
     logger.log('HTTP server closed');
     process.exit(0);
   });
-
 }
 
 bootstrap().catch((error) => {
