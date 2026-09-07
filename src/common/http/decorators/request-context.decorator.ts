@@ -1,7 +1,1 @@
-export interface RequestContext {
-  requestId: string;
-  userId?: string;
-  organizationId: string;
-  locationId: string;
-  timestamp: Date;
-}
+export type { RequestContext } from '../interfaces/request-context.interface';

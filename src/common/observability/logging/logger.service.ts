@@ -7,7 +7,7 @@ export class LoggerService extends Logger {
     super('App');
   }
 
-  log(message: string, context?: string, meta?: any): void {
+  log(message: string, context?: string, meta?: Record<string, unknown>): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       level: 'info',
@@ -15,10 +15,15 @@ export class LoggerService extends Logger {
       context: context || this.context,
       meta,
     };
-    console.log(JSON.stringify(logEntry));
+    super.log(JSON.stringify(logEntry), context);
   }
 
-  error(message: string, trace?: string, context?: string, meta?: any): void {
+  error(
+    message: string,
+    trace?: string,
+    context?: string,
+    meta?: Record<string, unknown>,
+  ): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       level: 'error',
@@ -27,10 +32,10 @@ export class LoggerService extends Logger {
       context: context || this.context,
       meta,
     };
-    console.error(JSON.stringify(logEntry));
+    super.error(JSON.stringify(logEntry), trace, context);
   }
 
-  warn(message: string, context?: string, meta?: any): void {
+  warn(message: string, context?: string, meta?: Record<string, unknown>): void {
     const logEntry = {
       timestamp: new Date().toISOString(),
       level: 'warn',
@@ -38,10 +43,10 @@ export class LoggerService extends Logger {
       context: context || this.context,
       meta,
     };
-    console.warn(JSON.stringify(logEntry));
+    super.warn(JSON.stringify(logEntry), context);
   }
 
-  debug(message: string, context?: string, meta?: any): void {
+  debug(message: string, context?: string, meta?: Record<string, unknown>): void {
     const logLevel = this.configService.get<string>(
       'observability.logging.level',
     );
@@ -53,7 +58,7 @@ export class LoggerService extends Logger {
         context: context || this.context,
         meta,
       };
-      console.debug(JSON.stringify(logEntry));
+      super.debug(JSON.stringify(logEntry), context);
     }
   }
 }

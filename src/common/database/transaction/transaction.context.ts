@@ -1,5 +1,1 @@
-export interface TransactionContext {
-  organizationId: string;
-  locationId: string;
-  userId?: string;
-}
+export type { TransactionContext } from './transaction-context.interface';

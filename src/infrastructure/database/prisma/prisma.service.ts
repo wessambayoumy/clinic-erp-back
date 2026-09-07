@@ -1,49 +1,32 @@
 import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-  OnModuleDestroy,
+	Injectable,
+	Logger,
+	OnModuleDestroy,
+	OnModuleInit,
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
+	extends PrismaClient
+	implements OnModuleInit, OnModuleDestroy
 {
-  private readonly logger = new Logger(PrismaService.name);
+	private readonly logger = new Logger(PrismaService.name);
 
-  constructor() {
-    super({
-      log: [
-        {
-          emit: 'event',
-          level: 'error',
-        },
-        {
-          emit: 'event',
-          level: 'warn',
-        },
-      ],
-    });
-  }
+	async onModuleInit(): Promise<void> {
+		if (!process.env.DATABASE_URL) {
+			this.logger.warn(
+				'DATABASE_URL is not configured; database access is disabled',
+			);
+			return;
+		}
 
-  async onModuleInit(): Promise<void> {
-    // Attach event listeners for logging
-    this.$on('error', (event) => {
-      this.logger.error(`Prisma error: ${event.message}`);
-    });
+		await this.$connect();
+		this.logger.log('Database connection established');
+	}
 
-    this.$on('warn', (event) => {
-      this.logger.warn(`Prisma warning: ${event.message}`);
-    });
-
-    await this.$connect();
-    this.logger.log('Database connection established');
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
-    this.logger.log('Database connection closed');
-  }
+	async onModuleDestroy(): Promise<void> {
+		await this.$disconnect();
+		this.logger.log('Database connection closed');
+	}
 }

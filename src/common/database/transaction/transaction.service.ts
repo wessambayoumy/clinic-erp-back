@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { RLSService } from '../rls/rls.service';
 import { TransactionContext } from './transaction.context';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TransactionService {
@@ -15,12 +16,10 @@ export class TransactionService {
   /**
    * Execute a callback within a database transaction with RLS context
    * The RLS context is set for the duration of the transaction
-   * Note: This is a placeholder implementation that calls the callback directly.
-   * When Prisma's full transaction API is available, this should use $transaction.
    */
   async run<T>(
     context: TransactionContext,
-    callback: (client: any) => Promise<T>,
+    callback: (client: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     // Set RLS context
     this.rlsService.setContext({
@@ -30,7 +29,7 @@ export class TransactionService {
     });
 
     try {
-      const result = await callback(this.prisma);
+      const result = await this.prisma.$transaction((client) => callback(client));
       this.logger.debug(
         `Transaction completed for org: ${context.organizationId}`,
       );
@@ -39,6 +38,8 @@ export class TransactionService {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Transaction failed: ${message}`);
       throw error;
+    } finally {
+      this.rlsService.clearContext();
     }
   }
 }

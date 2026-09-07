@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 import { AbilityFactory } from '../casl/ability.factory';
 import {
   CHECK_ABILITY_KEY,
@@ -18,7 +19,7 @@ export class AbilityGuard implements CanActivate {
     private readonly abilityFactory: AbilityFactory,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const requirements = this.reflector.get<CheckAbilityParams[]>(
       CHECK_ABILITY_KEY,
       context.getHandler(),
@@ -28,7 +29,7 @@ export class AbilityGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
 
     if (!user) {

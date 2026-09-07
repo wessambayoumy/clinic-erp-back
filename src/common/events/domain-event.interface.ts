@@ -3,7 +3,7 @@ export interface DomainEvent {
   aggregateId: string;
   aggregateType: string;
   eventType: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   metadata: {
     requestId: string;
     userId: string;

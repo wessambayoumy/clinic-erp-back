@@ -1,22 +1,24 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthService } from './health.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('health')
+@Public()
 export class HealthController {
   constructor(private healthService: HealthService) {}
 
   @Get('live')
-  liveness() {
+  liveness(): ReturnType<HealthService['checkLiveness']> {
     return this.healthService.checkLiveness();
   }
 
   @Get('ready')
-  readiness() {
+  readiness(): ReturnType<HealthService['checkReadiness']> {
     return this.healthService.checkReadiness();
   }
 
   @Get()
-  health() {
+  health(): ReturnType<HealthService['checkHealth']> {
     return this.healthService.checkHealth();
   }
 }

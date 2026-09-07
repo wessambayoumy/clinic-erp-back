@@ -5,20 +5,22 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createClient } from 'redis';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
-  private client: any;
+  private client?: ReturnType<typeof createClient>;
   private isConnected = false;
+
+  get connected(): boolean {
+    return this.isConnected;
+  }
 
   constructor(private configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
     try {
-      // Dynamically try to load redis package
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { createClient } = require('redis');
       const redisUrl = this.configService.get<string>('redis.url');
 
       if (!redisUrl) {
@@ -57,7 +59,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  getClient(): any {
+  getClient(): ReturnType<typeof createClient> | undefined {
     return this.client;
   }
 

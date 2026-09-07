@@ -22,7 +22,9 @@ export class OutboxService {
         'OutboxService',
       );
     } catch (error) {
-      this.logger.error(`Failed to save event to outbox: ${error.message}`);
+      this.logger.error(
+        `Failed to save event to outbox: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -40,7 +42,9 @@ export class OutboxService {
         'OutboxService',
       );
     } catch (error) {
-      this.logger.error(`Failed to save events to outbox: ${error.message}`);
+      this.logger.error(
+        `Failed to save events to outbox: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -62,7 +66,9 @@ export class OutboxService {
     try {
       this.logger.log(`Event marked as published: ${eventId}`, 'OutboxService');
     } catch (error) {
-      this.logger.error(`Failed to mark event as published: ${error.message}`);
+      this.logger.error(
+        `Failed to mark event as published: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }

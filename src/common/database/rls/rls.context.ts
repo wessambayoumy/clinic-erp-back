@@ -1,5 +1,1 @@
-export interface RLSContext {
-  userId?: string;
-  organizationId: string;
-  locationId: string;
-}
+export type { RLSContext } from './rls-context.interface';

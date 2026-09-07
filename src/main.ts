@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { RequestContextInterceptor } from './common/http/interceptors/request-context.interceptor';
 import { LoggingInterceptor } from './common/http/interceptors/logging.interceptor';
@@ -8,14 +10,17 @@ import { RequestIdMiddleware } from './common/http/middleware/request-id.middlew
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
+
+  app.use(helmet());
 
   // Global prefix for API routes
-  const apiPrefix = process.env.API_PREFIX ?? 'api';
+  const apiPrefix = config.get<string>('app.apiPrefix', 'api');
   app.setGlobalPrefix(apiPrefix);
 
   // CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? 'http://localhost:3000',
+    origin: config.get<string>('app.corsOrigin', 'http://localhost:3000').split(','),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -35,6 +40,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
@@ -67,7 +73,7 @@ async function bootstrap() {
     process.exit(0);
   });
 
-  const port = process.env.PORT ?? 3000;
+  const port = config.get<number>('app.port', 3000);
   await app.listen(port);
 
   logger.log(`✓ Application running on port ${port}`);
@@ -75,6 +81,10 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  console.error('Failed to start application:', error);
+  const logger = new Logger('Bootstrap');
+  logger.error(
+    'Failed to start application',
+    error instanceof Error ? error.stack : String(error),
+  );
   process.exit(1);
 });
