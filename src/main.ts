@@ -10,26 +10,19 @@ import { RequestIdMiddleware } from './common/http/middleware/request-id.middlew
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
+
+  const configService = app.get(ConfigService);
+
+  const port = configService.get<number>('app.port') || 3000;
+  const apiPrefix = configService.get<string>('app.apiPrefix') || 'api';
+  const corsOrigin = configService.get<string>('app.corsOrigin');
 
   app.use(helmet());
-
-  // Global prefix for API routes
-  const apiPrefix = config.get<string>('app.apiPrefix', 'api');
   app.setGlobalPrefix(apiPrefix);
+  app.enableCors({ origin: corsOrigin });
 
-  // CORS configuration
-  app.enableCors({
-    origin: config.get<string>('app.corsOrigin', 'http://localhost:3000').split(','),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Request-ID',
-      'X-Organization-ID',
-      'X-Location-ID',
-    ],
+  await app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}/${apiPrefix}`);
   });
 
   // Request ID middleware
@@ -72,12 +65,6 @@ async function bootstrap() {
     logger.log('HTTP server closed');
     process.exit(0);
   });
-
-  const port = config.get<number>('app.port', 3000);
-  await app.listen(port);
-
-  logger.log(`✓ Application running on port ${port}`);
-  logger.log(`✓ API prefix: /${apiPrefix}`);
 }
 
 bootstrap().catch((error) => {

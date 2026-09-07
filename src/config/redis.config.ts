@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
 
-export default registerAs('redis', () => ({
-  url: process.env.REDIS_URL,
+export default registerAs('bullmq', () => ({
+  redisUrl: process.env.REDIS_URL,
 }));
