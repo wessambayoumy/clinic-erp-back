@@ -36,6 +36,7 @@ import { EncountersModule } from './modules/encounters/encounters.module';
 import { ClinicalWorkflowsModule } from './modules/clinical-workflows/clinical-workflows.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
