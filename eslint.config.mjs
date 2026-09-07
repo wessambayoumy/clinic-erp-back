@@ -17,6 +17,7 @@ import unicorn from 'eslint-plugin-unicorn';
 import jsdoc from 'eslint-plugin-jsdoc';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
+import {defineConfig} from 'eslint/config'
 
 export default defineConfig(
   // ---------------------------------------------------------------------
