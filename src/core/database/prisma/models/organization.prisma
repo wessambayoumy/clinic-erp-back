@@ -1,0 +1,98 @@
+// use prisma-next
+
+/// Multi-Tenant Hierarchy (Proposal §4.1): Organization -> Location -> Department -> Provider.
+/// This is the tenant root; every other module's tables hang off organizationId.
+
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  legalName String?
+  slug      String    @unique
+  timezone  String    @default("UTC")
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  locations   Location[]
+  departments Department[]
+  providers   Provider[]
+
+  @@map("organizations")
+}
+
+model Location {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  name           String
+  addressLine1   String?
+  city           String?
+  state          String?
+  postalCode     String?
+  country        String?
+  timezone       String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  departments  Department[]
+  providers    Provider[]
+
+  @@index([organizationId])
+  @@map("locations")
+}
+
+model Department {
+  id                      String    @id @default(uuid()) @db.Uuid
+  organizationId          String    @db.Uuid
+  locationId              String    @db.Uuid
+  name                    String
+  specialtyCode           String? // links to a FormTemplate.specialtyCode for dynamic forms
+  isSharedAcrossLocations Boolean   @default(false) // configurable resource sharing (Proposal §Architecture)
+  isActive                Boolean   @default(true)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [locationId], references: [id])
+  providers    Provider[]
+
+  @@index([organizationId, locationId])
+  @@map("departments")
+}
+
+enum ProviderType {
+  PHYSICIAN
+  DENTIST
+  OPHTHALMOLOGIST
+  NURSE
+  TECHNICIAN
+  ADMIN_STAFF
+  OTHER
+}
+
+model Provider {
+  id               String       @id @default(uuid()) @db.Uuid
+  organizationId   String       @db.Uuid
+  locationId       String       @db.Uuid
+  departmentId     String       @db.Uuid
+  userId           String       @db.Uuid // FK into identity.User (shared schema, cross-module reference)
+  providerType     ProviderType
+  licenseNumber    String?
+  npiNumber        String?
+  isSharedResource Boolean      @default(false) // staff shareable across departments/locations
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  deletedAt        DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [locationId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+
+  @@index([organizationId, locationId, departmentId])
+  @@map("providers")
+}

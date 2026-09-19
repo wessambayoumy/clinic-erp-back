@@ -5,4 +5,3 @@ export default registerAs('database', () => ({
 }));
 
 
-// npg_pGvl2zHStX9M

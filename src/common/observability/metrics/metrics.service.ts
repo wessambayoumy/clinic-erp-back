@@ -28,8 +28,9 @@ export class MetricsService {
     private readonly logger: LoggerService,
   ) {
     // Read once at construction rather than on every call.
-    this.enabled =
-      this.configService.get<boolean>('observability.metrics.enabled') ?? false;
+    // this.enabled =
+    //   this.configService.get<boolean>('observability.metrics.enabled') ?? false;
+    this.enabled = false;
   }
 
   /**

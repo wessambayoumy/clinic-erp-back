@@ -2,10 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
-import { AppModule } from './app.module';
-import { RequestContextInterceptor } from './common/http/interceptors/request-context.interceptor';
-import { LoggingInterceptor } from './common/http/interceptors/logging.interceptor';
-import { RequestIdMiddleware } from './common/http/middleware/request-id.middleware';
+import { AppConfigEnum } from './config/app.config.js';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -13,10 +11,9 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
 
-  const port = configService.get<number>('app.port') || 3000;
-  const apiPrefix = configService.get<string>('app.apiPrefix') || 'api';
-  const corsOrigin = configService.get<string>('app.corsOrigin');
-
+  const port = configService.get<number>(AppConfigEnum.port) || 3000;
+  const apiPrefix = configService.get<string>(AppConfigEnum.apiPrefix) || 'api';
+  const corsOrigin = configService.get<string>(AppConfigEnum.corsOrigin);
   app.use(helmet());
   app.setGlobalPrefix(apiPrefix);
   app.enableCors({ origin: corsOrigin });
@@ -26,7 +23,7 @@ async function bootstrap() {
   });
 
   // Request ID middleware
-  app.use(RequestIdMiddleware);
+  //  app.use(RequestIdMiddleware);
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -53,10 +50,10 @@ async function bootstrap() {
   );
 
   // Global interceptors for request context and logging
-  app.useGlobalInterceptors(
-    new RequestContextInterceptor(),
-    new LoggingInterceptor(),
-  );
+  // app.useGlobalInterceptors(
+  //   new RequestContextInterceptor(),
+  //   new LoggingInterceptor(),
+  // );
 
   // Graceful shutdown
   process.on('SIGTERM', async () => {

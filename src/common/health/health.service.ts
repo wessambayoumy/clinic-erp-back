@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-      // import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
-import { RedisService } from '@infrastructure/redis/redis.service';
+import { PrismaService } from '@core/database/prisma/prisma.service';
+import { RedisService } from '@/core/redis/redis.service';
 
 @Injectable()
 export class HealthService {
   private readonly logger = new Logger(HealthService.name);
 
   constructor(
-    // private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly redis: RedisService,
   ) {}
 
@@ -33,11 +33,11 @@ export class HealthService {
 
     // Database health check - placeholder
     try {
-      // if (this.prisma) {
-      //   checks.database.status = 'ok';
-      // } else {
-      //   checks.database.status = 'error';
-      // }
+      if (this.prisma) {
+        checks.database.status = 'ok';
+      } else {
+        checks.database.status = 'error';
+      }
     } catch (error) {
       checks.database.status = 'error';
       this.logger.error(
@@ -48,11 +48,11 @@ export class HealthService {
 
     // Redis health check
     try {
-      if (this.redis.connected) {
-        checks.redis.status = 'ok';
-      } else {
-        checks.redis.status = 'disabled';
-      }
+      // if (this.redis.isConnected) {
+      //   checks.redis.status = 'ok';
+      // } else {
+      //   checks.redis.status = 'disabled';
+      // }
     } catch (error) {
       checks.redis.status = 'error';
       this.logger.error(

@@ -1,0 +1,67 @@
+// use prisma-next
+
+/// Configurable Multi-Location Inventory (Proposal §4.3): items can be tracked in
+/// shared org-level pools or fully isolated per-location pools, chosen per item/location
+/// via `InventoryStockLevel.poolType` and resolved at the service layer.
+
+enum StockPoolType {
+  SHARED
+  ISOLATED
+}
+
+enum StockTransactionType {
+  RECEIPT
+  CONSUMPTION
+  ADJUSTMENT
+  TRANSFER
+}
+
+model InventoryItem {
+  id               String    @id @default(uuid()) @db.Uuid
+  organizationId   String    @db.Uuid
+  sku              String
+  name             String
+  unit             String // "box", "each", "ml" ...
+  reorderThreshold Int?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  stockLevels  InventoryStockLevel[]
+  transactions InventoryTransaction[]
+
+  @@unique([organizationId, sku])
+  @@map("inventory_items")
+}
+
+model InventoryStockLevel {
+  id              String        @id @default(uuid()) @db.Uuid
+  organizationId  String        @db.Uuid
+  inventoryItemId String        @db.Uuid
+  locationId      String        @db.Uuid // owning location; SHARED pools are aggregated across locations at query time
+  poolType        StockPoolType @default(ISOLATED)
+  quantityOnHand  Int           @default(0)
+  updatedAt       DateTime      @updatedAt
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@unique([organizationId, inventoryItemId, locationId])
+  @@map("inventory_stock_levels")
+}
+
+model InventoryTransaction {
+  id                String               @id @default(uuid()) @db.Uuid
+  organizationId    String               @db.Uuid
+  inventoryItemId   String               @db.Uuid
+  locationId        String               @db.Uuid
+  type              StockTransactionType
+  quantityDelta     Int // positive for receipts, negative for consumption
+  reason            String?
+  performedByUserId String               @db.Uuid
+  createdAt         DateTime             @default(now())
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([organizationId, inventoryItemId, locationId])
+  @@map("inventory_transactions")
+}

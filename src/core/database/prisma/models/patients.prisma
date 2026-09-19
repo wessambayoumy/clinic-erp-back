@@ -1,0 +1,127 @@
+// use prisma-next
+
+/// Patient Chart Management (Proposal §4.1): longitudinal record, allergies,
+/// medications, history, documents. Duplicate detection is a flag, not a hard merge,
+/// so downstream data isn't silently reassigned.
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum DocumentCategory {
+  REFERRAL
+  EXTERNAL_REPORT
+  CONSENT_FORM
+  LAB_RESULT
+  IMAGING_REPORT
+  OTHER
+}
+
+model Patient {
+  id                    String    @id @default(uuid()) @db.Uuid
+  organizationId        String    @db.Uuid
+  primaryLocationId     String?   @db.Uuid
+  mrn                   String // medical record number, unique per organization
+  firstName             String
+  lastName              String
+  dateOfBirth           DateTime  @db.Date
+  gender                Gender    @default(MALE)
+  email                 String?
+  phone                 String?
+  addressLine1          String?
+  city                  String?
+  state                 String?
+  postalCode            String?
+  country               String?
+  duplicateOfPatientId  String?   @db.Uuid // set by duplicate-detection when flagged as a likely match
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+
+  duplicateOf Patient?  @relation("PatientDuplicates", fields: [duplicateOfPatientId], references: [id])
+  duplicates   Patient[]    @relation("PatientDuplicates")
+
+  allergies      PatientAllergy[]
+  medications    PatientMedication[]
+  medicalHistory MedicalHistoryEntry[]
+  documents      PatientDocument[]
+
+  @@unique([organizationId, mrn])
+  @@index([organizationId, lastName, firstName])
+  @@index([organizationId, dateOfBirth])
+  @@map("patients")
+}
+
+model PatientAllergy {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  patientId      String   @db.Uuid
+  allergen       String
+  reaction       String?
+  severity       String?
+  notedAt        DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_allergies")
+}
+
+model PatientMedication {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  patientId      String    @db.Uuid
+  name           String
+  dosage         String?
+  frequency      String?
+  startDate      DateTime? @db.Date
+  endDate        DateTime? @db.Date
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_medications")
+}
+
+model MedicalHistoryEntry {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  patientId      String    @db.Uuid
+  category       String // "surgical" | "medical" | "family" | "social" ...
+  description    String
+  occurredOn     DateTime? @db.Date
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("medical_history_entries")
+}
+
+model PatientDocument {
+  id               String           @id @default(uuid()) @db.Uuid
+  organizationId   String           @db.Uuid
+  patientId        String           @db.Uuid
+  category         DocumentCategory
+  fileName         String
+  storageKey       String // S3-compatible object key
+  mimeType         String
+  sizeBytes        Int
+  uploadedByUserId String           @db.Uuid
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_documents")
+}

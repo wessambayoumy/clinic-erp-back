@@ -1,15 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { LoggerService } from '@common/observability/logging/logger.service';
+
+export interface IHealthStatus {
+  status: string;
+  error?: string;
+}
 
 @Injectable()
 export class DatabaseHealthIndicator {
-  private readonly logger = new Logger(DatabaseHealthIndicator.name);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
-  constructor(private readonly prisma: PrismaService) {}
-
-  async isHealthy(): Promise<{ status: string; error?: string }> {
+  public async isHealthy(): Promise<IHealthStatus> {
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      const plan = this.prisma.client.raw.sql`SELECT 1`.affectedCount().build();
+      await this.prisma.client.runtime().execute(plan);
       return { status: 'ok' };
     } catch (error) {
       this.logger.error(
@@ -19,3 +27,4 @@ export class DatabaseHealthIndicator {
     }
   }
 }
+

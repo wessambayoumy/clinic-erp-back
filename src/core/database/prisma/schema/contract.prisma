@@ -1,0 +1,12 @@
+
+// -----------------------------------------------------------------------
+// Tenancy convention used across every file in this folder:
+//   - Every tenant-owned table carries a scalar `organizationId String @db.Uuid`
+//     (plus `locationId`/`departmentId` where the hierarchy applies).
+//   - No table trusts client-supplied tenant IDs; the app layer sets these
+//     from RequestContextStorage (AsyncLocalStorage), matching Tier 1.
+//   - Postgres RLS policies (see rls-policies.sql) enforce this at the DB
+//     level via RLSService.applyContext() + set_config(), independent of
+//     whatever the application layer does or forgets to do.
+//   - IDs are `@db.Uuid` to match Postgres-native uuid columns.
+// -----------------------------------------------------------------------

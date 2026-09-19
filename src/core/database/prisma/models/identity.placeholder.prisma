@@ -1,0 +1,22 @@
+// use prisma-next
+
+/// PLACEHOLDER ONLY. Your `identity` module (currently empty barrel) owns the real
+/// User/Role/CASL models. This stub exists purely so `userId` scalar references in
+/// the other files below resolve during schema review. Delete this file and let the
+/// real identity module define `User` once Tier 2 (CASL) lands — do not merge both.
+
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  email          String
+  password       String
+  firstName      String?
+  lastName       String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([organizationId, email])
+  @@map("users")
+}

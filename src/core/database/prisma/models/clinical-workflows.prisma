@@ -1,0 +1,122 @@
+// use prisma-next
+
+/// Config-Driven Dynamic Forms, Medical Imaging/DICOM, and Cloud e-Faxing
+/// (Proposal §4.2). Forms are JSONB so specialty customization ships without
+/// migrations; imaging rows track studies/series produced by the Python
+/// pydicom microservice and rendered via OHIF/Cornerstone.
+
+enum ImagingModality {
+  XRAY
+  CT
+  MRI
+  ULTRASOUND
+  FUNDUS_PHOTO
+  OCT
+  OTHER
+}
+
+enum FaxDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum FaxStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  RECEIVED
+}
+
+model FormTemplate {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  departmentId   String?  @db.Uuid // null = org-wide template
+  name           String
+  specialtyCode  String?
+  version        Int      @default(1)
+  schema         Json // field/section definitions + validation rules
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  submissions FormSubmission[]
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId, departmentId])
+  @@map("form_templates")
+}
+
+model FormSubmission {
+  id                 String   @id @default(uuid()) @db.Uuid
+  organizationId     String   @db.Uuid
+  formTemplateId     String   @db.Uuid
+  encounterId        String?  @db.Uuid
+  patientId          String   @db.Uuid
+  data               Json // submitted values keyed by field id
+  submittedByUserId  String   @db.Uuid
+  submittedAt        DateTime @default(now())
+
+  formTemplate FormTemplate @relation(fields: [formTemplateId], references: [id])
+  encounter    Encounter?   @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@index([organizationId, formTemplateId])
+  @@map("form_submissions")
+}
+
+model ImagingStudy {
+  id               String          @id @default(uuid()) @db.Uuid
+  organizationId   String          @db.Uuid
+  patientId        String          @db.Uuid
+  encounterId      String?         @db.Uuid
+  modality         ImagingModality
+  studyInstanceUid String          @unique // DICOM Study Instance UID
+  description      String?
+  performedAt      DateTime?
+  storagePrefix    String // S3-compatible prefix written by the Python imaging service
+  status           String          @default("received") // received | processing | ready | failed
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  encounter Encounter?      @relation(fields: [encounterId], references: [id])
+  series    ImagingSeries[]
+
+  @@index([organizationId, patientId])
+  @@map("imaging_studies")
+}
+
+model ImagingSeries {
+  id                String   @id @default(uuid()) @db.Uuid
+  organizationId    String   @db.Uuid
+  imagingStudyId    String   @db.Uuid
+  seriesInstanceUid String   @unique
+  modality          String?
+  instanceCount     Int      @default(0)
+  storageKey        String // S3-compatible key for the series manifest OHIF/Cornerstone consumes
+  createdAt         DateTime @default(now())
+
+  study ImagingStudy @relation(fields: [imagingStudyId], references: [id])
+
+  @@index([organizationId, imagingStudyId])
+  @@map("imaging_series")
+}
+
+model FaxRecord {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  patientId      String?      @db.Uuid
+  encounterId    String?      @db.Uuid
+  documentId     String?      @db.Uuid
+  direction      FaxDirection
+  status         FaxStatus    @default(QUEUED)
+  fromNumber     String
+  toNumber       String
+  providerFaxId  String? // ID returned by the cloud fax API
+  pageCount      Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, patientId])
+  @@map("fax_records")
+}

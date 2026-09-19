@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RedisService } from '@infrastructure/redis/redis.service';
+import { RedisService } from '@/core/redis/redis.service';
 
 @Injectable()
 export class RedisHealthIndicator {

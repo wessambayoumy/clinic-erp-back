@@ -1,0 +1,95 @@
+// use prisma-next
+
+/// Intelligent Scheduling (Proposal §4.1): multi-provider calendar, room/equipment
+/// booking, conflict prevention, no-show tracking.
+
+enum ResourceType {
+  ROOM
+  EQUIPMENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CHECKED_IN
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+model Resource {
+  id                        String       @id @default(uuid()) @db.Uuid
+  organizationId            String       @db.Uuid
+  locationId                String       @db.Uuid
+  departmentId              String?      @db.Uuid
+  type                      ResourceType
+  name                      String
+  isSharedAcrossDepartments Boolean      @default(false)
+  isActive                  Boolean      @default(true)
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+
+  bookings ResourceBooking[]
+
+  @@index([organizationId, locationId])
+  @@map("resources")
+}
+
+model ProviderAvailability {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  providerId     String    @db.Uuid
+  dayOfWeek      Int // 0-6, Sunday-based
+  startTime      String // "09:00"
+  endTime        String // "17:00"
+  effectiveFrom  DateTime? @db.Date
+  effectiveTo    DateTime? @db.Date
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId, providerId, dayOfWeek])
+  @@map("provider_availabilities")
+}
+
+model Appointment {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  locationId     String            @db.Uuid
+  departmentId   String            @db.Uuid
+  providerId     String            @db.Uuid
+  patientId      String            @db.Uuid
+  status         AppointmentStatus @default(SCHEDULED)
+  startAt        DateTime
+  endAt          DateTime
+  reasonForVisit String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  cancelledAt    DateTime?
+
+  resourceBookings ResourceBooking[]
+
+  @@index([organizationId, providerId, startAt])
+  @@index([organizationId, patientId])
+  @@map("appointments")
+}
+
+model ResourceBooking {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  resourceId     String   @db.Uuid
+  appointmentId  String   @db.Uuid
+  startAt        DateTime
+  endAt          DateTime
+  createdAt      DateTime @default(now())
+
+  resource    Resource    @relation(fields: [resourceId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  // Double-booking prevention: check overlapping ranges inside TransactionService.run()
+  // before insert. For a hard DB-level guarantee, add a raw-SQL migration with a
+  // Postgres exclusion constraint: EXCLUDE USING gist (resource_id WITH =, tsrange(start_at, end_at) WITH &&).
+  @@index([organizationId, resourceId, startAt])
+  @@map("resource_bookings")
+}

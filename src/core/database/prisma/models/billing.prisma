@@ -1,0 +1,127 @@
+// use prisma-next
+
+/// Billing & Consolidated Invoicing, Insurance Eligibility (Proposal §4.3).
+/// Invoice.scope drives whether billing is split per department or rolled up
+/// into a single statement — same underlying encounter/line-item data either way.
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  VOID
+  WRITTEN_OFF
+}
+
+enum InvoiceScope {
+  DEPARTMENT
+  CONSOLIDATED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  INSURANCE
+  BANK_TRANSFER
+  OTHER
+}
+
+enum EligibilityStatus {
+  PENDING
+  ELIGIBLE
+  INELIGIBLE
+  ERROR
+}
+
+model InsurancePolicy {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  patientId      String    @db.Uuid
+  payerName      String
+  memberId       String
+  groupNumber    String?
+  isPrimary      Boolean   @default(true)
+  effectiveFrom  DateTime? @db.Date
+  effectiveTo    DateTime? @db.Date
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  eligibilityChecks EligibilityCheck[]
+
+  @@index([organizationId, patientId])
+  @@map("insurance_policies")
+}
+
+model EligibilityCheck {
+  id                String            @id @default(uuid()) @db.Uuid
+  organizationId    String            @db.Uuid
+  insurancePolicyId String            @db.Uuid
+  appointmentId     String?           @db.Uuid
+  status            EligibilityStatus @default(PENDING)
+  clearinghouseRef  String?
+  checkedAt         DateTime          @default(now())
+  rawResponse       Json? // clearinghouse payload, kept for audit/troubleshooting
+
+  insurancePolicy InsurancePolicy @relation(fields: [insurancePolicyId], references: [id])
+
+  @@index([organizationId, insurancePolicyId])
+  @@map("eligibility_checks")
+}
+
+model Invoice {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  locationId     String        @db.Uuid
+  departmentId   String?       @db.Uuid // null when scope = CONSOLIDATED
+  patientId      String        @db.Uuid
+  scope          InvoiceScope  @default(DEPARTMENT)
+  status         InvoiceStatus @default(DRAFT)
+  currency       String        @default("USD")
+  subtotalCents  Int           @default(0)
+  taxCents       Int           @default(0)
+  totalCents     Int           @default(0)
+  dueAt          DateTime?
+  issuedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  voidedAt       DateTime?
+
+  lineItems LineItem[]
+  payments  Payment[]
+
+  @@index([organizationId, patientId])
+  @@map("invoices")
+}
+
+model LineItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  invoiceId      String   @db.Uuid
+  encounterId    String?  @db.Uuid
+  description    String
+  quantity       Int      @default(1)
+  unitPriceCents Int
+  totalCents     Int
+  createdAt      DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([organizationId, invoiceId])
+  @@map("line_items")
+}
+
+model Payment {
+  id                    String        @id @default(uuid()) @db.Uuid
+  organizationId        String        @db.Uuid
+  invoiceId             String        @db.Uuid
+  method                PaymentMethod
+  amountCents           Int
+  stripePaymentIntentId String?       @unique
+  paidAt                DateTime      @default(now())
+  createdAt             DateTime      @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([organizationId, invoiceId])
+  @@map("payments")
+}

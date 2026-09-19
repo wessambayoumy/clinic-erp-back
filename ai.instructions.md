@@ -7,8 +7,9 @@ These rules govern how AI assistants (Claude, Copilot, Cursor, etc.) must genera
 ## 1. File & Folder Structure
 
 ### 1.1 One concept per file
+
 - **Enums**: one enum per file. File name = kebab-case of the enum name.
-  `role.enum.ts` → `export enum RoleEnum { ADMIN = 'ADMIN', USER = 'USER' }`
+  `role.enum.ts` → `export enum RoleEnum { ADMIN = 'admin', USER = 'user' }`
 - **Interfaces**: one interface per file. `user.interface.ts` → `export interface IUser { ... }`
 - **DTOs**: one DTO class per file. `create-user.dto.ts`, `update-user.dto.ts`, `login.dto.ts`. Never bundle request/response DTOs together.
 - **Events**: one event class per file. `user-created.event.ts`, `order-shipped.event.ts`.
@@ -16,25 +17,27 @@ These rules govern how AI assistants (Claude, Copilot, Cursor, etc.) must genera
 - **Guards, Interceptors, Pipes, Filters, Decorators**: one per file.
 
 ### 1.2 Naming conventions
-| Type | Suffix | Example |
-|---|---|---|
-| Enum | `.enum.ts` | `role.enum.ts` |
-| Interface | `.interface.ts` | `user.interface.ts` |
-| DTO | `.dto.ts` | `create-user.dto.ts` |
-| Event | `.event.ts` | `user-created.event.ts` |
-| Prisma model helper | `.model.ts` | `user.model.ts` |
-| Service | `.service.ts` | `user.service.ts` |
-| Controller | `.controller.ts` | `user.controller.ts` |
-| Module | `.module.ts` | `user.module.ts` |
-| Guard | `.guard.ts` | `jwt-auth.guard.ts` |
-| Interceptor | `.interceptor.ts` | `logging.interceptor.ts` |
-| Repository | `.repository.ts` | `user.repository.ts` |
+
+| Type                | Suffix            | Example                  |
+| ------------------- | ----------------- | ------------------------ |
+| Enum                | `.enum.ts`        | `role.enum.ts`           |
+| Interface           | `.interface.ts`   | `user.interface.ts`      |
+| DTO                 | `.dto.ts`         | `create-user.dto.ts`     |
+| Event               | `.event.ts`       | `user-created.event.ts`  |
+| Prisma model helper | `.model.ts`       | `user.model.ts`          |
+| Service             | `.service.ts`     | `users.service.ts`       |
+| Controller          | `.controller.ts`  | `users.controller.ts`    |
+| Module              | `.module.ts`      | `users.module.ts`        |
+| Guard               | `.guard.ts`       | `jwt-auth.guard.ts`      |
+| Interceptor         | `.interceptor.ts` | `logging.interceptor.ts` |
+| Repository          | `.repository.ts`  | `users.repository.ts`    |
 
 - Interfaces prefixed with `I` (`IUser`, `IPaginationOptions`).
 - Enums suffixed with `Enum` (`RoleEnum`, `OrderStatusEnum`).
 - Types suffixed with `Type` if a standalone type file is needed (`sort-order.type.ts` → `SortOrderType`).
 
 ### 1.3 Mandatory `index.ts` barrel files
+
 **Every folder must contain an `index.ts`** that re-exports everything else in that same directory (not subdirectories — each subdirectory owns its own barrel).
 
 ```ts
@@ -44,12 +47,14 @@ export * from './user-with-roles.interface';
 ```
 
 Rules for barrels:
+
 - Only `export * from './file'` statements — no logic, no re-declared types.
 - Never barrel-export the folder's own `index.ts` recursively.
 - Parent-level barrels re-export child barrels by folder, e.g. `export * from './interfaces';`, keeping deep imports like `import { IUser } from '../interfaces'` clean.
 - Do not create circular barrel chains (A's index imports B's index which imports A's index) — the AI must check for this before generating.
 
 ### 1.4 Standard module layout
+
 ```
 src/modules/user/
 ├── controllers/
@@ -82,6 +87,36 @@ src/modules/user/
 └── index.ts
 ```
 
+### 1.5 No raw string unions — use enums
+
+**Never model a fixed set of values as a raw string-literal union.** If a field can only take one of a known, finite set of values, it must be backed by a dedicated enum file (§1.1/§1.2), not an inline union type.
+
+```ts
+// ❌ Wrong — raw string union, no single source of truth, no runtime value
+interface IOrder {
+  status: 'active' | 'inactive';
+}
+
+// ✅ Correct — enum in its own file (status.enum.ts), referenced everywhere
+export enum StatusEnum {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+}
+
+interface IOrder {
+  status: StatusEnum;
+}
+```
+
+This applies to DTO fields, interface/model properties, function parameters, Prisma enum-backed columns, and query params alike — anywhere a value is drawn from a closed set. Reasons this is mandatory, not stylistic:
+
+- A string union has no runtime representation — you can't iterate, validate, or reference its members (`Object.values(StatusEnum)`) the way you can an enum.
+- Enums pair directly with `@typescript-eslint/switch-exhaustiveness-check` (§6) so new statuses force a compiler error at every `switch` that must handle them — a string union does not get this safety net the same way.
+- `class-validator`'s `@IsEnum(StatusEnum)` gives real DTO validation; validating a string union requires a hand-rolled `@IsIn([...])` that duplicates the value list and drifts out of sync.
+- A single enum file is the one place the allowed values live — a string union tends to get retyped ad hoc across DTOs, interfaces, and Prisma schema, and those copies silently diverge.
+
+If the AI encounters an existing raw string union while touching a file, flag it and propose extracting it into an enum rather than propagating the pattern further.
+
 ---
 
 ## 2. Performance
@@ -113,7 +148,7 @@ src/modules/user/
     forbidNonWhitelisted: true,
     transform: true,
     forbidUnknownValues: true,
-  })
+  });
   ```
 - **Helmet**: always register `helmet` globally (`app.use(helmet())`).
 - **Rate limiting**: `@nestjs/throttler` on all public endpoints, stricter limits on auth/OTP/password-reset routes.
@@ -135,7 +170,7 @@ src/modules/user/
 ## 4. Module Organization
 
 - **Do not create a dedicated module for a single-purpose, stateless utility service.** A service that wraps one narrow concern (e.g. `EmailService`, `EncryptionService`, `HashService`, `JwtService` wrapper, `PdfService`) does not get its own `*.module.ts`.
-- Instead, group these utility/infrastructure services into a shared **`SecurityModule`** (for auth/crypto/hash/jwt-related services) or a **`SharedModule`** / **`CoreModule`** (for cross-cutting utilities like email, PDF generation, file storage), exported once so any feature module can import it.
+- Instead, group these utility/core services into a shared **`SecurityModule`** (for auth/crypto/hash/jwt-related services) or a **`SharedModule`** / **`CoreModule`** (for cross-cutting utilities like email, PDF generation, file storage), exported once so any feature module can import it.
   ```
   src/modules/security/
   ├── services/
@@ -158,6 +193,7 @@ src/modules/user/
 - Every public method in a service/controller has an explicit return type — never inferred `Promise<any>`.
 - Use `Logger` (scoped per-class: `new Logger(UserService.name)`) instead of `console.*`.
 - Lifecycle hooks (`OnModuleInit`, `OnModuleDestroy`) used for setup/teardown instead of ad-hoc `constructor` side effects.
+- Never model a closed set of values as a raw string-literal union — always use an enum per §1.5.
 
 ## 6. ESLint — Enforced Rules the AI Must Satisfy
 
@@ -169,7 +205,7 @@ This project lints with a flat config (`eslint.config.mjs`) combining `typescrip
   - DTO classes specifically must end in `Dto` (enforced separately for `**/*.dto.ts` files).
   - Type aliases, classes: `PascalCase`. Variables: `camelCase`/`UPPER_CASE`/`PascalCase`. Parameters: `camelCase` (leading `_` allowed for unused).
   - `property` selector has no enforced format — DTO/API field names, Prisma-generated shapes, and HTTP header names are exempt.
-- **Type safety**: no `any` (`no-explicit-any`), explicit return types on all functions and exported class members (`explicit-function-return-type`, `explicit-module-boundary-types`), no floating/misused promises, no non-null assertions (`!`), exhaustive `switch` over enums (`switch-exhaustiveness-check` — pairs directly with every `*Enum` you define), type-only imports written as `import type` (`consistent-type-imports`).
+- **Type safety**: no `any` (`no-explicit-any`), explicit return types on all functions and exported class members (`explicit-function-return-type`, `explicit-module-boundary-types`), no floating/misused promises, no non-null assertions (`!`), exhaustive `switch` over enums (`switch-exhaustiveness-check` — pairs directly with every `*Enum` you define, and is the concrete enforcement mechanism behind §1.5's no-raw-string-union rule), type-only imports written as `import type` (`consistent-type-imports`).
 - **Security (`eslint-plugin-security`)**: no `eval`/`new Function`, no non-literal `fs` paths (path traversal), no unsafe/non-literal `RegExp`, no `child_process` misuse, use `crypto.randomBytes` not `Math.random()` for anything security-sensitive, use `crypto.timingSafeEqual` instead of `===` when comparing secrets/tokens/hashes.
   - `security/detect-object-injection` is set to `warn` and is intentionally noisy (flags any dynamic property access, including safe `Map`/`Record` lookups). Do not blanket-disable it — review each hit and, if it's a genuine false positive, add `// eslint-disable-next-line security/detect-object-injection` with a one-line justification, not a file-level or rule-level disable.
 - **Complexity (`eslint-plugin-sonarjs`)**: keep function cognitive complexity ≤ 15 — if a method approaches this, extract helper methods rather than adding an inline disable. No duplicated string literals (5+ occurrences) outside DTOs/tests, no duplicated conditional branches, no nested template literals.
@@ -191,3 +227,5 @@ This project lints with a flat config (`eslint.config.mjs`) combining `typescrip
 6. Never skip pagination, rate limiting, or validation "for now" — these are not optional scaffolding steps.
 7. Before creating a new module, check whether the service being added is a single-purpose utility — if so, place it in `SecurityModule` or `SharedModule` instead of scaffolding a new module.
 8. Write code that satisfies §6's ESLint rules from the start (explicit return types, naming conventions, no `any`, no `console.*`, ordered imports) rather than relying on a later lint-fix pass.
+9. Create JSDocs for all functions, classes, and modules.
+10. Never introduce a raw string-literal union for a closed set of values — create an enum file per §1.5 instead.

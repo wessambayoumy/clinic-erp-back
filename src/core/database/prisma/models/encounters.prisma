@@ -1,0 +1,74 @@
+// use prisma-next
+
+/// Universal Encounter Record (Proposal §4.2): ICD-10 diagnoses, vitals, treatment
+/// plan — generic enough for any specialty, extended via FormSubmission (see
+/// clinical-workflows.prisma) rather than per-specialty schema changes.
+
+enum EncounterStatus {
+  DRAFT
+  SIGNED
+  AMENDED
+  VOID
+}
+
+model Encounter {
+  id                String          @id @default(uuid()) @db.Uuid
+  organizationId    String          @db.Uuid
+  locationId        String          @db.Uuid
+  departmentId      String          @db.Uuid
+  providerId        String          @db.Uuid
+  patientId         String          @db.Uuid
+  appointmentId     String?         @db.Uuid
+  status            EncounterStatus @default(DRAFT)
+  chiefComplaint    String?
+  assessment        String?
+  treatmentPlanNote String?
+  signedAt          DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  diagnoses       EncounterDiagnosis[]
+  vitalSigns      VitalSign[]
+  formSubmissions FormSubmission[]
+  imagingStudies  ImagingStudy[]
+
+  @@index([organizationId, patientId])
+  @@index([organizationId, providerId])
+  @@map("encounters")
+}
+
+model EncounterDiagnosis {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  encounterId    String   @db.Uuid
+  icd10Code      String
+  description    String
+  isPrimary      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, encounterId])
+  @@map("encounter_diagnoses")
+}
+
+model VitalSign {
+  id                     String   @id @default(uuid()) @db.Uuid
+  organizationId         String   @db.Uuid
+  encounterId            String   @db.Uuid
+  heightCm               Decimal? @db.Decimal(5, 2)
+  weightKg               Decimal? @db.Decimal(5, 2)
+  temperatureC           Decimal? @db.Decimal(4, 2)
+  bloodPressureSystolic  Int?
+  bloodPressureDiastolic Int?
+  heartRateBpm           Int?
+  respiratoryRate        Int?
+  oxygenSaturation       Decimal? @db.Decimal(4, 1)
+  recordedAt             DateTime @default(now())
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, encounterId])
+  @@map("vital_signs")
+}

@@ -1,14 +1,14 @@
 # Clinic ERP Project Structure
 
-This document records the current directory layout of the Clinic ERP backend. The project is organized as a NestJS application with shared capabilities under `src/common`, infrastructure adapters under `src/infrastructure`, and business bounded contexts under `src/modules`.
+This document records the current directory layout of the Clinic ERP backend. The project is organized as a NestJS application with shared capabilities under `src/common`, core adapters under `src/core`, and business bounded contexts under `src/modules`.
 
 ## Architecture Overview
 
 - `prisma/` - Prisma schema, migrations, and row-level security scripts.
 - `src/common/` - Shared cross-cutting concerns used by multiple modules.
-- `src/config/` - Application and infrastructure configuration.
-- `src/infrastructure/` - External systems, persistence, queues, Redis, and storage adapters.
-- `src/modules/` - Business domains organized by application, domain, infrastructure, and presentation layers.
+- `src/config/` - Application and core configuration.
+- `src/core/` - External systems, persistence, queues, Redis, and storage adapters.
+- `src/modules/` - Business domains organized by application, domain, core, and presentation layers.
 - `test/` - End-to-end, integration, and unit test suites.
 
 ## Directory Tree
@@ -46,7 +46,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │   │       ├── metrics/
 │   │       └── tracing/
 │   ├── config/
-│   ├── infrastructure/
+│   ├── core/
 │   │   ├── bullmq/
 │   │   │   ├── processors/
 │   │   │   └── queues/
@@ -65,18 +65,18 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       ├── billing/
 │       │   ├── application/
 │       │   ├── domain/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   └── presentation/
 │       ├── clinical-workflows/
 │       │   ├── application/
 │       │   ├── domain/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   │   └── schema-engine/
 │       │   └── presentation/
 │       ├── encounters/
 │       │   ├── application/
 │       │   ├── domain/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   └── presentation/
 │       ├── identity/
 │       │   ├── application/
@@ -90,7 +90,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       │   │   ├── repositories/
 │       │   │   ├── services/
 │       │   │   └── value-objects/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   │   └── persistence/
 │       │   │       └── prisma/
 │       │   └── presentation/
@@ -100,7 +100,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       ├── inventory/
 │       │   ├── application/
 │       │   ├── domain/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   └── presentation/
 │       ├── organization/
 │       │   ├── application/
@@ -114,7 +114,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       │   │   ├── repositories/
 │       │   │   ├── services/
 │       │   │   └── value-objects/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   │   └── persistence/
 │       │   │       └── prisma/
 │       │   └── presentation/
@@ -133,7 +133,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       │   │   ├── repositories/
 │       │   │   ├── services/
 │       │   │   └── value-objects/
-│       │   ├── infrastructure/
+│       │   ├── core/
 │       │   │   └── persistence/
 │       │   │       └── prisma/
 │       │   └── presentation/
@@ -143,7 +143,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       └── scheduling/
 │           ├── application/
 │           ├── domain/
-│           ├── infrastructure/
+│           ├── core/
 │           └── presentation/
 └── test/
     ├── e2e/
@@ -155,7 +155,7 @@ This document records the current directory layout of the Clinic ERP backend. Th
 
 - `application/` - Use cases, commands, queries, and application DTOs.
 - `domain/` - Entities, value objects, domain events, repositories, and business rules.
-- `infrastructure/` - Database implementations and integrations with external systems.
+- `core/` - Database implementations and integrations with external systems.
 - `presentation/` - HTTP controllers, request DTOs, and transport-specific concerns.
 
 Each directory can own an `index.ts` barrel for exports, following the repository conventions in `ai.instructions.md`.

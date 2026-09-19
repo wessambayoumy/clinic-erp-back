@@ -2,7 +2,10 @@
   "$schema": "https://json.schemastore.org/swcrc",
   "sourceMaps": true,
   "module": {
-    "type": "commonjs"
+    "type": "commonjs",
+    "strict": true,
+    "strictMode": true,
+    "noInterop": false
   },
   "jsc": {
     "parser": {
@@ -14,13 +17,27 @@
       "legacyDecorator": true,
       "decoratorMetadata": true
     },
-    "target": "es2022",
+    "target": "ES2023",
     "keepClassNames": true,
+    "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@common/*": ["./src/common/*"],
       "@config/*": ["./src/config/*"],
-      "@infrastructure/*": ["./src/infrastructure/*"],
-      "@modules/*": ["./src/modules/*"]
-    }
-  }
+      "@features/*": ["./src/features/*"],
+      "@core/*": ["./src/core/*"]
+    },
+    "loose": false,
+    "externalHelpers": false,
+    "preserveAllComments": false
+  },
+  "isModule": true,
+  "minify": false,
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".*\\.spec\\.ts$",
+    ".*\\.e2e-spec\\.ts$",
+    "test/"
+  ]
 }

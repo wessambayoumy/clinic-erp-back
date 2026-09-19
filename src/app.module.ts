@@ -7,10 +7,10 @@ import { AppService } from './app.service';
 // Configuration
 import { ConfigurationModule } from './config/configuration.module';
 
-// Infrastructure
-import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
-import { RedisModule } from './infrastructure/redis/redis.module';
-import { BullMQModule } from './infrastructure/bullmq/bullmq.module';
+// core
+import { PrismaModule } from './core/database/prisma/prisma.module';
+import { RedisModule } from './core/redis/redis.module';
+import { BullMQModule } from './core/bullmq/bullmq.module';
 
 // Common services
 import { AuthModule } from './common/auth/auth.module';
@@ -28,15 +28,14 @@ import { TransactionService } from './common/database/transaction/transaction.se
 import { RequestIdMiddleware } from './common/http/middleware/request-id.middleware';
 
 // Business modules
-import { IdentityModule } from './modules/identity/identity.module';
-import { OrganizationModule } from './modules/organization/organization.module';
-import { PatientsModule } from './modules/patients/patients.module';
-import { SchedulingModule } from './modules/scheduling/scheduling.module';
-import { EncountersModule } from './modules/encounters/encounters.module';
-import { ClinicalWorkflowsModule } from './modules/clinical-workflows/clinical-workflows.module';
-import { BillingModule } from './modules/billing/billing.module';
-import { InventoryModule } from './modules/inventory/inventory.module';
-import { ConfigModule } from '@nestjs/config';
+import { IdentityModule } from './features/identity/identity.module';
+import { OrganizationModule } from './features/organization/organization.module';
+import { PatientsModule } from './features/patients/patients.module';
+import { SchedulingModule } from './features/scheduling/scheduling.module';
+import { EncountersModule } from './features/encounters/encounters.module';
+import { ClinicalWorkflowsModule } from './features/clinical-workflows/clinical-workflows.module';
+import { BillingModule } from './features/billing/billing.module';
+import { InventoryModule } from './features/inventory/inventory.module';
 
 @Module({
   imports: [
@@ -49,7 +48,7 @@ import { ConfigModule } from '@nestjs/config';
       },
     ]),
 
-    // Core infrastructure
+    // Core core
     PrismaModule,
     RedisModule,
     BullMQModule,
