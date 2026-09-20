@@ -9,7 +9,7 @@ export class RedisHealthIndicator {
 
   async isHealthy(): Promise<{ status: string; error?: string }> {
     try {
-      const client = this.redisService.getClient();
+      const client = this.redisService.client;
       if (!client) {
         return { status: 'disabled' };
       }

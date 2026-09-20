@@ -18,6 +18,7 @@ export class DatabaseHealthIndicator {
     try {
       const plan = this.prisma.client.raw.sql`SELECT 1`.affectedCount().build();
       await this.prisma.client.runtime().execute(plan);
+      console.log('Database health check passed');
       return { status: 'ok' };
     } catch (error) {
       this.logger.error(
