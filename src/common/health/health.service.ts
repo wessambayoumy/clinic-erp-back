@@ -13,6 +13,7 @@ export class HealthService {
 
   async checkLiveness(): Promise<{ status: string; timestamp: string }> {
     this.logger.log('Liveness check performed');
+    console.log('Liveness check passed');
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -24,6 +25,7 @@ export class HealthService {
     checks: Record<string, { status: string }>;
     timestamp: string;
   }> {
+    console.log('Readiness check performed');
     this.logger.log('Readiness check performed');
     const checks: Record<string, { status: string; error?: string }> = {
       database: { status: 'ok' },
@@ -48,11 +50,11 @@ export class HealthService {
 
     // Redis health check
     try {
-      // if (this.redis.isConnected) {
-      //   checks.redis.status = 'ok';
-      // } else {
-      //   checks.redis.status = 'disabled';
-      // }
+       if (this.redis.client) {
+         checks.redis.status = 'ok';
+       } else {
+         checks.redis.status = 'disabled';
+       }
     } catch (error) {
       checks.redis.status = 'error';
       this.logger.error(

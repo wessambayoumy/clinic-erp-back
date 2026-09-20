@@ -5,7 +5,7 @@ import { LoggerService } from '@common/observability/logging/logger.service';
 
 @Injectable()
 export class RedisService implements OnModuleInit {
-  private client?: RedisClientType;
+  public client?: RedisClientType;
   private isConnected = false;
 
   constructor(private readonly configService: ConfigService, private readonly logger: LoggerService) {}
