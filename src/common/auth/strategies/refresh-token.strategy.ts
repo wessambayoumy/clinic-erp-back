@@ -31,7 +31,9 @@ export class RefreshTokenStrategy extends PassportStrategy(
       organizationId: String(payload.organizationId),
       locationId: String(payload.locationId),
       roles: Array.isArray(payload.roles)
-        ? payload.roles.filter((role): role is string => typeof role === 'string')
+        ? payload.roles.filter(
+            (role): role is string => typeof role === 'string',
+          )
         : [],
     });
   }
