@@ -1,74 +1,61 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import { AppConfigEnum } from './config/app.config.js';
-import { AppModule } from './app.module.js';
+import { NestFactory } from '@nestjs/core';
 
-async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import compress from '@fastify/compress';
+import helmet from '@fastify/helmet';
+
+import { LoggerService } from './common/observability/logging/logger.service.js';
+import { AppModule } from './app.module.js';
+import { ConfigConsts } from './config/config.consts';
+
+/** Configures and starts the Fastify HTTP server. */
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
 
   const configService = app.get(ConfigService);
+  const loggerService = app.get(LoggerService);
+  app.useLogger(loggerService);
 
-  const port = configService.get<number>(AppConfigEnum.port) || 3000;
-  const apiPrefix = configService.get<string>(AppConfigEnum.apiPrefix) || 'api';
-  const corsOrigin = configService.get<string>(AppConfigEnum.corsOrigin);
-  app.use(helmet());
+  const port = configService.getOrThrow<number>(ConfigConsts.app.port);
+  const apiPrefix = configService.getOrThrow<string>(
+    ConfigConsts.app.apiPrefix,
+  );
+  const corsOrigins = configService
+    .getOrThrow<string>(ConfigConsts.app.corsOrigin)
+    .split(',')
+    .map((origin: string): string => origin.trim())
+    .filter((origin: string): boolean => origin.length > 0);
+
+  await app.register(helmet);
+  await app.register(compress);
   app.setGlobalPrefix(apiPrefix);
-  app.enableCors({ origin: corsOrigin });
+  app.enableCors({ origin: corsOrigins });
 
-  await app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}/${apiPrefix}`);
-  });
-
-  // Request ID middleware
-  //  app.use(RequestIdMiddleware);
-
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-      exceptionFactory: (errors) => {
-        const messages = errors.map((error) => ({
-          field: error.property,
-          errors: Object.values(error.constraints || {}),
-        }));
-        return new BadRequestException({
-          statusCode: 400,
-          message: 'Validation failed',
-          errors: messages,
-        });
-      },
-    }),
-  );
-
-  // Global interceptors for request context and logging
-  // app.useGlobalInterceptors(
-  //   new RequestContextInterceptor(),
-  //   new LoggingInterceptor(),
-  // );
-
-  // Graceful shutdown
+  app.enableShutdownHooks();
   process.on('SIGTERM', async () => {
-    logger.log('SIGTERM signal received: closing HTTP server');
+    loggerService.log('SIGTERM signal received: closing HTTP server');
     await app.close();
-    logger.log('HTTP server closed');
-    process.exit(0);
+    loggerService.log('HTTP server closed');
   });
-}
 
+  await app.listen({ port, host: '0.0.0.0' });
+  loggerService.log(`Server is running on port ${String(port)}`, 'Bootstrap');
+}
 bootstrap().catch((error) => {
-  const logger = new Logger('Bootstrap');
-  logger.error(
-    'Failed to start application',
-    error instanceof Error ? error.stack : String(error),
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  process.stderr.write(
+    JSON.stringify({
+      level: 'fatal',
+      message: 'Failed to start application',
+      error: errorMessage,
+    }) + '\n',
   );
-  process.exit(1);
+  process.exitCode = 1;
 });

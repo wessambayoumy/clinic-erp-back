@@ -1,4 +1,5 @@
 import {
+  ConsoleLogger,
   Injectable,
   Logger,
   LoggerService as NestLoggerService,
@@ -50,7 +51,7 @@ interface LogEntry {
  * gated behind `observability.logging.level` config.
  */
 @Injectable()
-export class LoggerService extends Logger implements NestLoggerService {
+export class LoggerService extends ConsoleLogger implements NestLoggerService {
   constructor(private readonly configService: ConfigService) {
     super('App');
   }

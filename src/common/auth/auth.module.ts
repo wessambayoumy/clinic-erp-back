@@ -19,12 +19,16 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
       provide: 'JWT_CONFIG',
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const accessSecret = configService.getOrThrow<string>('auth.jwt.accessSecret');
+        const accessSecret = configService.getOrThrow<string>(
+          'auth.jwt.accessSecret',
+        );
 
         return {
           secret: accessSecret,
           signOptions: {
-            expiresIn: configService.getOrThrow<string>('auth.jwt.accessExpiresIn'),
+            expiresIn: configService.getOrThrow<string>(
+              'auth.jwt.accessExpiresIn',
+            ),
           },
         };
       },

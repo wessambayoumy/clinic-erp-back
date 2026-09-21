@@ -32,7 +32,8 @@ export class LoggingInterceptor implements NestInterceptor {
         },
         error: (error) => {
           const duration = Date.now() - startTime;
-          const message = error instanceof Error ? error.message : String(error);
+          const message =
+            error instanceof Error ? error.message : String(error);
           this.logger.error(
             `[${requestId}] ${method} ${url} - Error (${duration}ms): ${message}`,
           );

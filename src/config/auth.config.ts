@@ -1,7 +1,8 @@
 import { registerAs } from '@nestjs/config';
 import { generateSecret } from './generate_secret';
+import { ConfigEnum } from './config.enum';
 
-export default registerAs('auth', () => {
+export default registerAs(ConfigEnum.auth, () => {
   const isProduction = process.env.NODE_ENV === 'production';
   return {
     jwt: {

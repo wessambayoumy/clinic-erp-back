@@ -50,11 +50,11 @@ export class HealthService {
 
     // Redis health check
     try {
-       if (this.redis.client) {
-         checks.redis.status = 'ok';
-       } else {
-         checks.redis.status = 'disabled';
-       }
+      if (this.redis.client) {
+        checks.redis.status = 'ok';
+      } else {
+        checks.redis.status = 'disabled';
+      }
     } catch (error) {
       checks.redis.status = 'error';
       this.logger.error(
