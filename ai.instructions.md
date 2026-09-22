@@ -227,5 +227,5 @@ This project lints with a flat config (`eslint.config.mjs`) combining `typescrip
 6. Never skip pagination, rate limiting, or validation "for now" — these are not optional scaffolding steps.
 7. Before creating a new module, check whether the service being added is a single-purpose utility — if so, place it in `SecurityModule` or `SharedModule` instead of scaffolding a new module.
 8. Write code that satisfies §6's ESLint rules from the start (explicit return types, naming conventions, no `any`, no `console.*`, ordered imports) rather than relying on a later lint-fix pass.
-9. Create JSDocs for all functions, classes, and modules.
+9. Create JSDocs for all functions, classes, methods, and modules.
 10. Never introduce a raw string-literal union for a closed set of values — create an enum file per §1.5 instead.
