@@ -1,14 +1,22 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { randomUUID } from 'node:crypto';
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { randomUUID } from 'crypto';
 
 @Injectable()
-export class RequestIdMiddleware implements NestMiddleware {
-  private readonly logger = new Logger(RequestIdMiddleware.name);
+class RequestIdMiddleware implements NestMiddleware {
+  use(req: FastifyRequest['raw'] & { headers: Record<string, any>; id?: string }, res: FastifyReply['raw'], next: () => void): void {
+    
+    const existingId = req.headers['x-request-id'];
+    const requestId = typeof existingId === 'string' ? existingId : randomUUID();
 
-  use(req: Request, res: Response, next: NextFunction): void {
-    const requestId = req.get('x-request-id') || randomUUID();
-    res.setHeader('x-request-id', requestId);
+    req.headers['x-request-id'] = requestId;
+    
+    if (res && typeof res.setHeader === 'function') {
+      res.setHeader('x-request-id', requestId);
+    }
+
     next();
   }
 }
+
+export { RequestIdMiddleware };

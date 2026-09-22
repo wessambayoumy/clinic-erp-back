@@ -98,32 +98,28 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
    * passes the result to serialize() then the appropriate console.
    */
   private build(
-    level: LogEntry['level'],
-    message: string,
+    level: LogLevelEnum,
+    message: string | Record<string, unknown>,
     context?: string,
     meta?: Record<string, unknown>,
     trace?: string,
   ): LogEntry {
+    const messageString = typeof message === 'string' 
+      ? message 
+      : JSON.stringify(message);
+
     return {
       timestamp: new Date().toISOString(),
       level,
-      message,
+      message: messageString,
       context: context || this.context,
       trace,
-      meta: meta ? (this.redact(meta) as Record<string, unknown>) : undefined,
+      meta: meta ? (this.redact(meta) as Record<string, unknown>) : (typeof message === 'object' ? this.redact(message) as Record<string, unknown> : undefined),
     };
   }
 
-  /** Info-level log. Always emitted. */
-  log(message: string, context?: string, meta?: Record<string, unknown>): void {
-    console.log(
-      this.serialize(this.build(LogLevelEnum.INFO, message, context, meta)),
-    );
-  }
-
-  /** Error-level log with optional stack trace. Always emitted, written to stderr. */
   error(
-    message: string,
+    message: string | Record<string, unknown>,
     trace?: string,
     context?: string,
     meta?: Record<string, unknown>,
@@ -134,7 +130,6 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
       ),
     );
   }
-
   /** Warning-level log. Always emitted. */
   warn(
     message: string,

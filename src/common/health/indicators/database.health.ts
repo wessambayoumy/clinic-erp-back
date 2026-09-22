@@ -22,6 +22,7 @@ export class DatabaseHealthIndicator {
       return { status: 'ok' };
     } catch (error) {
       this.logger.error(
+        
         `Database health check failed: ${(error as Error).message}`,
       );
       return { status: 'error', error: (error as Error).message };
