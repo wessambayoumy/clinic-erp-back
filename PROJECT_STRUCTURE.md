@@ -129,7 +129,6 @@ This document records the current directory layout of the Clinic ERP backend. Th
 │       │   ├── domain/
 │       │   │   ├── entities/
 │       │   │   ├── events/
-│       │   │   ├── exceptions/
 │       │   │   ├── repositories/
 │       │   │   ├── services/
 │       │   │   └── value-objects/

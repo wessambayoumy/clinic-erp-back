@@ -5,14 +5,24 @@
 /// migrations; imaging rows track studies/series produced by the Python
 /// pydicom microservice and rendered via OHIF/Cornerstone.
 
-enum ImagingModality {
-  XRAY
-  CT
-  MRI
-  ULTRASOUND
-  FUNDUS_PHOTO
-  OCT
-  OTHER
+// use prisma-next
+
+enum ImagingModalityEnum {
+  CR   // Computed Radiography (x-ray)
+  DX   // Digital Radiography (x-ray)
+  CT   // Computed Tomography
+  MR   // Magnetic Resonance Imaging
+  US   // Ultrasound
+  MG   // Mammography
+  PT   // Positron Emission Tomography (PET)
+  NM   // Nuclear Medicine
+  XA   // X-Ray Angiography
+  RF   // Radiofluoroscopy
+  OP   // Ophthalmic Photography (fundus)
+  OPT  // Ophthalmic Tomography (OCT)
+  ES   // Endoscopy
+  DOC  // Scanned Document
+  OT   // Other — DICOM's own catch-all code, not a custom one
 }
 
 enum FaxDirection {
@@ -91,7 +101,7 @@ model ImagingSeries {
   organizationId    String   @db.Uuid
   imagingStudyId    String   @db.Uuid
   seriesInstanceUid String   @unique
-  modality          String?
+  modality          ImagingModality
   instanceCount     Int      @default(0)
   storageKey        String // S3-compatible key for the series manifest OHIF/Cornerstone consumes
   createdAt         DateTime @default(now())
