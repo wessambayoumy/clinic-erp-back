@@ -41,6 +41,7 @@ import { EncountersModule } from './features/encounters/encounters.module';
 import { ClinicalWorkflowsModule } from './features/clinical-workflows/clinical-workflows.module';
 import { BillingModule } from './features/billing/billing.module';
 import { InventoryModule } from './features/inventory/inventory.module';
+import { RequestContextStorage } from './common/http/interceptors/request-context.storage';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { InventoryModule } from './features/inventory/inventory.module';
     AppService,
     RLSService,
     TransactionService,
+    RequestContextStorage,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
