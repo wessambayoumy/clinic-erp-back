@@ -2,15 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { AuthenticatedUser } from '../../auth/interfaces/authenticated-user.interface';
 import { AppAbility } from './ability.types';
 
-// Minimal ability type - can be extended when @casl/ability is installed
-
 @Injectable()
 export class AbilityFactory {
   createForUser(user: AuthenticatedUser): AppAbility {
-    // Minimal implementation - full CASL integration when package is installed
     const permissions: Record<string, string[]> = {
-      user: ['read', 'read:own'],
       admin: ['manage', 'all'],
+      provider: [
+        'read:patients',
+        'manage:encounters',
+        'read:scheduling',
+        'manage:scheduling',
+        'read:imaging',
+        'create:imaging',
+      ],
+      receptionist: [
+        'manage:patients',
+        'read:scheduling',
+        'manage:scheduling',
+        'read:providers',
+      ],
+      billing_officer: [
+        'manage:billing',
+        'read:encounters',
+        'read:patients',
+        'read:services',
+      ],
+      inventory_manager: [
+        'manage:inventory',
+        'read:suppliers',
+        'manage:suppliers',
+      ],
+      insurance_coordinator: [
+        'manage:insurance',
+        'read:patients',
+        'read:payers',
+      ],
     };
 
     const userRoles = user.roles || [];
@@ -22,11 +48,10 @@ export class AbilityFactory {
 
     return {
       can: (action: string, _subject: string): boolean => {
-        // Basic permission check
         if (user.roles?.includes('admin')) {
           return true;
         }
-        return abilities.includes(action);
+        return abilities.includes(action) || abilities.includes('manage');
       },
       cannot: (action: string, subject: string): boolean => {
         const ability = this.createForUser(user);
