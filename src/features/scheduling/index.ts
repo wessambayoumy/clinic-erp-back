@@ -1,5 +1,3 @@
-// export * from './scheduling.module';
-// // export * from './application';
-// // export * from './domain';
-// // export * from './core';
-// // export * from './presentation';
+export * from './scheduling.controller';
+export * from './scheduling.module';
+export * from './scheduling.service';

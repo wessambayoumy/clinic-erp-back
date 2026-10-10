@@ -18,11 +18,10 @@ import { RedisModule } from './core/redis/redis.module';
 import { BullMQModule } from './core/bullmq/bullmq.module';
 
 // Common services
-import { AuthModule } from './common/auth/auth.module';
-import { AuthorizationModule } from './common/authorization/authorization.module';
+import { AuthModule } from './common/auth.module';
+import { AuthorizationModule } from './common/authorization.module';
 import { HealthModule } from './common/health/health.module';
 import { ObservabilityModule } from './common/observability/observability.module';
-import { AuditModule } from './common/audit/audit.module';
 import { EventsModule } from './common/events/events.module';
 
 // Database services
@@ -64,7 +63,6 @@ import { RequestContextStorage } from './common/http/interceptors/request-contex
     AuthorizationModule,
     HealthModule,
     ObservabilityModule,
-    AuditModule,
     EventsModule,
 
     // Business bounded contexts

@@ -1,5 +1,5 @@
-// export * from './bullmq.config';
-// export * from './bullmq-queue-config.interface';
-// export * from './bullmq.module';
-// export * from './processors';
-// export * from './queues';
+export * from './bullmq-queue-config.interface';
+export * from './bullmq.config';
+export * from './bullmq.module';
+export * from './processors';
+export * from './queues';

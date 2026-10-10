@@ -1,5 +1,3 @@
-// export * from './identity.module';
-// // export * from './application';
-// // export * from './domain';
-// // export * from './core';
-// // export * from './presentation';
+export * from './identity.controller';
+export * from './identity.module';
+export * from './identity.service';

@@ -16,6 +16,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@common/*": ["./src/common/*"],
+      "@shared/*": ["./src/shared/*"],
       "@config/*": ["./src/config/*"],
       "@core/*": ["./src/core/*"],
       "@features/*": ["./src/features/*"]

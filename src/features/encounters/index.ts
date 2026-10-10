@@ -1,5 +1,3 @@
-// export * from './encounters.module';
-// // export * from './application';
-// // export * from './domain';
-// // export * from './core';
-// // export * from './presentation';
+export * from './encounters.controller';
+export * from './encounters.module';
+export * from './encounters.service';

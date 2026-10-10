@@ -1,5 +1,3 @@
-// export * from './inventory.module';
-// // export * from './application';
-// // export * from './domain';
-// // export * from './core';
-// // export * from './presentation';
+export * from './inventory.controller';
+export * from './inventory.module';
+export * from './inventory.service';
