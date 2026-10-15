@@ -1,4 +1,4 @@
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import {
   PrismaTransaction,
   TransactionService,

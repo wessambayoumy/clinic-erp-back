@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'node:crypto';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 
 /** Internal record for an in-flight span. */
 interface ActiveSpan {

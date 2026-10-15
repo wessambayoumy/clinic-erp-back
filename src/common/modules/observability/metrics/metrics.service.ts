@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 
 /** Hard ceiling on distinct metric+label combinations to prevent cardinality-driven memory exhaustion. */
 const MAX_SERIES = 10_000;
