@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { PrismaTransaction, TransactionService } from '@common/database/transaction';
-import { BaseRepository } from '@common/database/repositories/base.repository';
+import { BaseRepository } from './base.repository';
+import { Observed } from '@/common/decorators';
 
-/** Tenant-aware repository for the Appointment model owned by this feature. */
+/** Tenant-aware repository for the Encounter model owned by this feature. */
+@Observed()
 @Injectable()
-export class SchedulingRepository extends BaseRepository<
+export class EncountersRepository extends BaseRepository<
   Record<string, unknown>,
   { id: string },
   Record<string, unknown>,
@@ -19,8 +21,8 @@ export class SchedulingRepository extends BaseRepository<
     super(transactionService, logger);
   }
 
-  /** Selects the Appointment collection from the scoped transaction. */
+  /** Selects the Encounter collection from the scoped transaction. */
   protected getCollection(tx: PrismaTransaction): object {
-    return (tx.orm.public as Record<string, object>).Appointment;
+    return (tx.orm.public as Record<string, object>).Encounter;
   }
 }

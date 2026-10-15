@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import postgres from '@prisma/orm-postgres/runtime';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import contractJson from '@/prisma/contract.json';
 
 type DbClient = ReturnType<typeof postgres>;

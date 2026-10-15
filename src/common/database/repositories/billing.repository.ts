@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { PrismaTransaction, TransactionService } from '@common/database/transaction';
-import { BaseRepository } from '@common/database/repositories/base.repository';
+import { BaseRepository } from './base.repository';
+import { Observed } from '@/common/decorators';
 
 /** Tenant-aware repository for the Invoice model owned by this feature. */
+@Observed()
 @Injectable()
 export class BillingRepository extends BaseRepository<
   Record<string, unknown>,

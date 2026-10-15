@@ -1,9 +1,10 @@
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { Injectable } from '@nestjs/common';
 import { RLSService } from '@common/database/rls/rls.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
 import { db } from '@/prisma/db';
 import { RequestContextStorage } from '@common/http/interceptors/request-context.storage';
+import { Observed } from '@/common/decorators';
 
 /**
  * The transaction handle Prisma ORM 8 passes into `db.transaction(callback)`.
@@ -20,6 +21,7 @@ export type PrismaTransaction = Parameters<
   Parameters<typeof db.transaction>[0]
 >[0];
 
+@Observed()
 @Injectable()
 export class TransactionService {
   constructor(

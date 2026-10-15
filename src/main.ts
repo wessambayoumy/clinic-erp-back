@@ -8,7 +8,7 @@ import { Catch, ArgumentsHost, ExceptionFilter, HttpException } from '@nestjs/co
 import compress from '@fastify/compress';
 import helmet from '@fastify/helmet';
 
-import { LoggerService } from './common/observability/logging/logger.service.js';
+import { LoggerService } from './common/modules/observability/logging/logger.service.js';
 import { AppModule } from './app.module.js';
 import { ConfigConsts } from './config/config.consts';
 

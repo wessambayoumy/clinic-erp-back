@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { RLSContext } from './rls.context';
-import { LoggerService } from '@common/observability/logging/logger.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { PrismaTransaction } from '../transaction/transaction.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
 

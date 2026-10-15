@@ -21,7 +21,7 @@ import { BullMQModule } from './core/bullmq/bullmq.module';
 import { AuthModule } from './common/auth.module';
 import { AuthorizationModule } from './common/authorization.module';
 import { HealthModule } from './common/health/health.module';
-import { ObservabilityModule } from './common/observability/observability.module';
+import { ObservabilityModule } from './common/modules/observability/observability.module';
 import { EventsModule } from './common/events/events.module';
 
 // Database services
