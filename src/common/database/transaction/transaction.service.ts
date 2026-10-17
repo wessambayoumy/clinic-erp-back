@@ -2,7 +2,7 @@ import { LoggerService } from '@/common/modules/observability/logging/logger.ser
 import { Injectable } from '@nestjs/common';
 import { RLSService } from '@common/database/rls/rls.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
-import { db } from '@/prisma/db';
+import { db } from '@/core/database/db';
 import { RequestContextStorage } from '@common/http/interceptors/request-context.storage';
 import { Observed } from '@/common/decorators';
 
