@@ -4,40 +4,13 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { Catch, ArgumentsHost, ExceptionFilter, HttpException } from '@nestjs/common';
 import compress from '@fastify/compress';
 import helmet from '@fastify/helmet';
 
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { LoggerService } from './common/modules/observability/logging/logger.service.js';
 import { AppModule } from './app.module.js';
 import { ConfigConsts } from './config/config.consts';
-
-/** Global exception filter to catch and log unhandled errors clearly with Fastify. */
-@Catch()
-class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
-
-  catch(exception: unknown, host: ArgumentsHost): void {
-    const { httpAdapter } = this.httpAdapterHost;
-    const ctx = host.switchToHttp();
-
-    console.error('=== CAUGHT UNHANDLED EXCEPTION ===', exception);
-
-    const httpStatus =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : 500;
-
-    const responseBody = {
-      statusCode: httpStatus,
-      timestamp: new Date().toISOString(),
-      path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: exception instanceof Error ? exception.message : 'Internal server error',
-    };
-
-    httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
-  }
-}
 
 /** Configures and starts the Fastify HTTP server. */
 async function bootstrap(): Promise<void> {

@@ -3,6 +3,7 @@ export * from './billing';
 export * from './clinical-workflows';
 export * from './encounters';
 export * from './identity';
+export * from './http';
 export * from './insurance';
 export * from './inventory';
 export * from './patients';
