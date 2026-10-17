@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { RLSContext } from './rls.context';
-import { LoggerService } from '@/common/modules/observability/logging/logger.service';
+import { RLS_CONTEXT_VARS } from './rls.constants';
+import { LoggerService } from '@common/modules/observability/logging/logger.service';
 import { PrismaTransaction } from '../transaction/transaction.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
 
@@ -40,9 +41,9 @@ export class RLSService {
     // transaction's own connection — which is the part that matters for RLS.
     const plan = this.prisma.client.raw.sql`
       SELECT
-        set_config('app.organization_id', ${context.organizationId}, true) AS org,
-        set_config('app.location_id', ${context.locationId ?? ''}, true) AS loc,
-        set_config('app.user_id', ${context.userId ?? ''}, true) AS usr
+        set_config(${RLS_CONTEXT_VARS.CURRENT_ORG_ID}, ${context.organizationId}, true) AS org,
+        set_config(${RLS_CONTEXT_VARS.CURRENT_LOCATION_ID}, ${context.locationId ?? ''}, true) AS loc,
+        set_config(${RLS_CONTEXT_VARS.CURRENT_USER_ID}, ${context.userId ?? ''}, true) AS usr
     `
       .returnsRow({ org: 'pg/text@1', loc: 'pg/text@1', usr: 'pg/text@1' })
       .build();

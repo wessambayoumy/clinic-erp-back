@@ -1,0 +1,751 @@
+// use prisma-next
+//
+// Single source of truth for the data contract. Converted from the per-module
+// files in src/core/database/prisma/models/ (classic Prisma syntax) to Prisma
+// Next syntax:
+//   @db.Uuid            -> Uuid in type position
+//   DateTime            -> TimestamptzString   (Node 22 has no global Temporal;
+//                          the Temporal-backed DateTime throws at runtime)
+//   @db.Date            -> DateString          (same reason)
+//   DateTime @updatedAt -> temporal.updatedAtString()
+//   @db.Decimal(p, s)   -> Decimal             (this release has no precision
+//                          form; the column is unconstrained numeric)
+//
+// Tenancy: every tenant-owned table carries a scalar `organizationId Uuid`.
+// Postgres RLS (core/database/prisma/rls-policies.sql) enforces isolation at the
+// database level via RLSService.applyContext().
+//
+// `User` is a PLACEHOLDER for the real identity module (Tier 2 / CASL).
+// Replace it, do not keep both.
+
+/// Multi-Tenant Hierarchy (Proposal §4.1): Organization -> Location -> Department -> Provider.
+/// This is the tenant root; every other module's tables hang off organizationId.
+
+model Organization {
+  id        Uuid                       @id @default(uuid())
+  name      String
+  legalName String?
+  slug      String                     @unique
+  timezone  String                     @default("UTC")
+  isActive  Boolean                    @default(true)
+  createdAt TimestamptzString          @default(now())
+  updatedAt temporal.updatedAtString()
+  deletedAt TimestamptzString?
+
+  locations   Location[]
+  departments Department[]
+  providers   Provider[]
+
+  @@map("organizations")
+}
+
+model Location {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  name           String
+  addressLine1   String?
+  city           String?
+  state          String?
+  postalCode     String?
+  country        String?
+  timezone       String?
+  isActive       Boolean                    @default(true)
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+  deletedAt      TimestamptzString?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  departments  Department[]
+  providers    Provider[]
+
+  @@index([organizationId])
+  @@map("locations")
+}
+
+model Department {
+  id                      Uuid                       @id @default(uuid())
+  organizationId          Uuid
+  locationId              Uuid
+  name                    String
+  specialtyCode           String?                    // links to a FormTemplate.specialtyCode for dynamic forms
+  isSharedAcrossLocations Boolean                    @default(false) // configurable resource sharing (Proposal §Architecture)
+  isActive                Boolean                    @default(true)
+  createdAt               TimestamptzString          @default(now())
+  updatedAt               temporal.updatedAtString()
+  deletedAt               TimestamptzString?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [locationId], references: [id])
+  providers    Provider[]
+
+  @@index([organizationId, locationId])
+  @@map("departments")
+}
+
+enum ProviderType {
+  PHYSICIAN
+  DENTIST
+  OPHTHALMOLOGIST
+  NURSE
+  TECHNICIAN
+  ADMIN_STAFF
+  OTHER
+}
+
+model Provider {
+  id               Uuid                       @id @default(uuid())
+  organizationId   Uuid
+  locationId       Uuid
+  departmentId     Uuid
+  userId           Uuid                       // FK into identity.User (shared schema, cross-module reference)
+  providerType     ProviderType
+  licenseNumber    String?
+  npiNumber        String?
+  isSharedResource Boolean                    @default(false) // staff shareable across departments/locations
+  isActive         Boolean                    @default(true)
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+  deletedAt        TimestamptzString?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [locationId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+
+  @@index([organizationId, locationId, departmentId])
+  @@map("providers")
+}
+
+/// PLACEHOLDER ONLY. Your `identity` module (currently empty barrel) owns the real
+/// User/Role/CASL models. This stub exists purely so `userId` scalar references in
+/// the other files below resolve during schema review. Delete this file and let the
+/// real identity module define `User` once Tier 2 (CASL) lands — do not merge both.
+
+model User {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  email          String
+  password       String
+  firstName      String?
+  lastName       String?
+  isActive       Boolean                    @default(true)
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+  deletedAt      TimestamptzString?
+
+  @@unique([organizationId, email])
+  @@map("users")
+}
+
+/// Patient Chart Management (Proposal §4.1): longitudinal record, allergies,
+/// medications, history, documents. Duplicate detection is a flag, not a hard merge,
+/// so downstream data isn't silently reassigned.
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum DocumentCategory {
+  REFERRAL
+  EXTERNAL_REPORT
+  CONSENT_FORM
+  LAB_RESULT
+  IMAGING_REPORT
+  OTHER
+}
+
+model Patient {
+  id                   Uuid                       @id @default(uuid())
+  organizationId       Uuid
+  primaryLocationId    Uuid?
+  mrn                  String                     // medical record number, unique per organization
+  firstName            String
+  lastName             String
+  dateOfBirth          DateString
+  gender               Gender                     @default(MALE)
+  email                String?
+  phone                String?
+  addressLine1         String?
+  city                 String?
+  state                String?
+  postalCode           String?
+  country              String?
+  duplicateOfPatientId Uuid?                      // set by duplicate-detection when flagged as a likely match
+  isActive             Boolean                    @default(true)
+  createdAt            TimestamptzString          @default(now())
+  updatedAt            temporal.updatedAtString()
+  deletedAt            TimestamptzString?
+
+  duplicateOf Patient?  @relation("PatientDuplicates", fields: [duplicateOfPatientId], references: [id])
+  duplicates  Patient[] @relation("PatientDuplicates")
+
+  allergies      PatientAllergy[]
+  medications    PatientMedication[]
+  medicalHistory MedicalHistoryEntry[]
+  documents      PatientDocument[]
+
+  @@unique([organizationId, mrn])
+  @@index([organizationId, lastName, firstName])
+  @@index([organizationId, dateOfBirth])
+  @@map("patients")
+}
+
+model PatientAllergy {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  patientId      Uuid
+  allergen       String
+  reaction       String?
+  severity       String?
+  notedAt        TimestamptzString          @default(now())
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_allergies")
+}
+
+model PatientMedication {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  patientId      Uuid
+  name           String
+  dosage         String?
+  frequency      String?
+  startDate      DateString?
+  endDate        DateString?
+  isActive       Boolean                    @default(true)
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_medications")
+}
+
+model MedicalHistoryEntry {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  patientId      Uuid
+  category       String                     // "surgical" | "medical" | "family" | "social" ...
+  description    String
+  occurredOn     DateString?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("medical_history_entries")
+}
+
+model PatientDocument {
+  id               Uuid                       @id @default(uuid())
+  organizationId   Uuid
+  patientId        Uuid
+  category         DocumentCategory
+  fileName         String
+  storageKey       String                     // S3-compatible object key
+  mimeType         String
+  sizeBytes        Int
+  uploadedByUserId Uuid
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+  deletedAt        TimestamptzString?
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@map("patient_documents")
+}
+
+/// Intelligent Scheduling (Proposal §4.1): multi-provider calendar, room/equipment
+/// booking, conflict prevention, no-show tracking.
+
+enum ResourceType {
+  ROOM
+  EQUIPMENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CHECKED_IN
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+model Resource {
+  id                        Uuid                       @id @default(uuid())
+  organizationId            Uuid
+  locationId                Uuid
+  departmentId              Uuid?
+  type                      ResourceType
+  name                      String
+  isSharedAcrossDepartments Boolean                    @default(false)
+  isActive                  Boolean                    @default(true)
+  createdAt                 TimestamptzString          @default(now())
+  updatedAt                 temporal.updatedAtString()
+
+  bookings ResourceBooking[]
+
+  @@index([organizationId, locationId])
+  @@map("resources")
+}
+
+model ProviderAvailability {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  providerId     Uuid
+  dayOfWeek      Int                        // 0-6, Sunday-based
+  startTime      String                     // "09:00"
+  endTime        String                     // "17:00"
+  effectiveFrom  DateString?
+  effectiveTo    DateString?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  @@index([organizationId, providerId, dayOfWeek], name: "provider_avail_org_prov_dow")
+  @@map("provider_availabilities")
+}
+
+model Appointment {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  locationId     Uuid
+  departmentId   Uuid
+  providerId     Uuid
+  patientId      Uuid
+  status         AppointmentStatus          @default(SCHEDULED)
+  startAt        TimestamptzString
+  endAt          TimestamptzString
+  reasonForVisit String?
+  notes          String?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+  cancelledAt    TimestamptzString?
+
+  resourceBookings ResourceBooking[]
+
+  @@index([organizationId, providerId, startAt])
+  @@index([organizationId, patientId])
+  @@map("appointments")
+}
+
+model ResourceBooking {
+  id             Uuid              @id @default(uuid())
+  organizationId Uuid
+  resourceId     Uuid
+  appointmentId  Uuid
+  startAt        TimestamptzString
+  endAt          TimestamptzString
+  createdAt      TimestamptzString @default(now())
+
+  resource    Resource    @relation(fields: [resourceId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  // Double-booking prevention: check overlapping ranges inside TransactionService.run()
+  // before insert. For a hard DB-level guarantee, add a raw-SQL migration with a
+  // Postgres exclusion constraint: EXCLUDE USING gist (resource_id WITH =, tsrange(start_at, end_at) WITH &&).
+  @@index([organizationId, resourceId, startAt], name: "resource_bookings_org_res_start")
+  @@map("resource_bookings")
+}
+
+/// Universal Encounter Record (Proposal §4.2): ICD-10 diagnoses, vitals, treatment
+/// plan — generic enough for any specialty, extended via FormSubmission (see
+/// clinical-workflows.prisma) rather than per-specialty schema changes.
+
+enum EncounterStatus {
+  DRAFT
+  SIGNED
+  AMENDED
+  VOID
+}
+
+model Encounter {
+  id                Uuid                       @id @default(uuid())
+  organizationId    Uuid
+  locationId        Uuid
+  departmentId      Uuid
+  providerId        Uuid
+  patientId         Uuid
+  appointmentId     Uuid?
+  status            EncounterStatus            @default(DRAFT)
+  chiefComplaint    String?
+  assessment        String?
+  treatmentPlanNote String?
+  signedAt          TimestamptzString?
+  createdAt         TimestamptzString          @default(now())
+  updatedAt         temporal.updatedAtString()
+  deletedAt         TimestamptzString?
+
+  diagnoses       EncounterDiagnosis[]
+  vitalSigns      VitalSign[]
+  formSubmissions FormSubmission[]
+  imagingStudies  ImagingStudy[]
+
+  @@index([organizationId, patientId])
+  @@index([organizationId, providerId])
+  @@map("encounters")
+}
+
+model EncounterDiagnosis {
+  id             Uuid              @id @default(uuid())
+  organizationId Uuid
+  encounterId    Uuid
+  icd10Code      String
+  description    String
+  isPrimary      Boolean           @default(false)
+  createdAt      TimestamptzString @default(now())
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, encounterId])
+  @@map("encounter_diagnoses")
+}
+
+model VitalSign {
+  id                     Uuid              @id @default(uuid())
+  organizationId         Uuid
+  encounterId            Uuid
+  heightCm               Decimal?
+  weightKg               Decimal?
+  temperatureC           Decimal?
+  bloodPressureSystolic  Int?
+  bloodPressureDiastolic Int?
+  heartRateBpm           Int?
+  respiratoryRate        Int?
+  oxygenSaturation       Decimal?
+  recordedAt             TimestamptzString @default(now())
+
+  encounter Encounter @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, encounterId])
+  @@map("vital_signs")
+}
+
+/// Config-Driven Dynamic Forms, Medical Imaging/DICOM, and Cloud e-Faxing
+/// (Proposal §4.2). Forms are JSONB so specialty customization ships without
+/// migrations; imaging rows track studies/series produced by the Python
+/// pydicom microservice and rendered via OHIF/Cornerstone.
+
+enum ImagingModality {
+  CR // Computed Radiography (x-ray)
+  DX // Digital Radiography (x-ray)
+  CT // Computed Tomography
+  MR // Magnetic Resonance Imaging
+  US // Ultrasound
+  MG // Mammography
+  PT // Positron Emission Tomography (PET)
+  NM // Nuclear Medicine
+  XA // X-Ray Angiography
+  RF // Radiofluoroscopy
+  OP // Ophthalmic Photography (fundus)
+  OPT // Ophthalmic Tomography (OCT)
+  ES // Endoscopy
+  DOC // Scanned Document
+  OT // Other — DICOM's own catch-all code, not a custom one
+}
+
+enum FaxDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum FaxStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  RECEIVED
+}
+
+model FormTemplate {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  departmentId   Uuid?                      // null = org-wide template
+  name           String
+  specialtyCode  String?
+  version        Int                        @default(1)
+  schema         Json                       // field/section definitions + validation rules
+  isActive       Boolean                    @default(true)
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  submissions FormSubmission[]
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId, departmentId])
+  @@map("form_templates")
+}
+
+model FormSubmission {
+  id                Uuid              @id @default(uuid())
+  organizationId    Uuid
+  formTemplateId    Uuid
+  encounterId       Uuid?
+  patientId         Uuid
+  data              Json              // submitted values keyed by field id
+  submittedByUserId Uuid
+  submittedAt       TimestamptzString @default(now())
+
+  formTemplate FormTemplate @relation(fields: [formTemplateId], references: [id])
+  encounter    Encounter?   @relation(fields: [encounterId], references: [id])
+
+  @@index([organizationId, patientId])
+  @@index([organizationId, formTemplateId])
+  @@map("form_submissions")
+}
+
+model ImagingStudy {
+  id               Uuid                       @id @default(uuid())
+  organizationId   Uuid
+  patientId        Uuid
+  encounterId      Uuid?
+  modality         ImagingModality
+  studyInstanceUid String                     @unique // DICOM Study Instance UID
+  description      String?
+  performedAt      TimestamptzString?
+  storagePrefix    String                     // S3-compatible prefix written by the Python imaging service
+  status           String                     @default("received") // received | processing | ready | failed
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  encounter Encounter?      @relation(fields: [encounterId], references: [id])
+  series    ImagingSeries[]
+
+  @@index([organizationId, patientId])
+  @@map("imaging_studies")
+}
+
+model ImagingSeries {
+  id                Uuid              @id @default(uuid())
+  organizationId    Uuid
+  imagingStudyId    Uuid
+  seriesInstanceUid String            @unique
+  modality          ImagingModality
+  instanceCount     Int               @default(0)
+  storageKey        String            // S3-compatible key for the series manifest OHIF/Cornerstone consumes
+  createdAt         TimestamptzString @default(now())
+
+  study ImagingStudy @relation(fields: [imagingStudyId], references: [id])
+
+  @@index([organizationId, imagingStudyId])
+  @@map("imaging_series")
+}
+
+model FaxRecord {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  patientId      Uuid?
+  encounterId    Uuid?
+  documentId     Uuid?
+  direction      FaxDirection
+  status         FaxStatus                  @default(QUEUED)
+  fromNumber     String
+  toNumber       String
+  providerFaxId  String?                    // ID returned by the cloud fax API
+  pageCount      Int?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  @@index([organizationId, patientId])
+  @@map("fax_records")
+}
+
+/// Configurable Multi-Location Inventory (Proposal §4.3): items can be tracked in
+/// shared org-level pools or fully isolated per-location pools, chosen per item/location
+/// via `InventoryStockLevel.poolType` and resolved at the service layer.
+
+enum StockPoolType {
+  SHARED
+  ISOLATED
+}
+
+enum StockTransactionType {
+  RECEIPT
+  CONSUMPTION
+  ADJUSTMENT
+  TRANSFER
+}
+
+model InventoryItem {
+  id               Uuid                       @id @default(uuid())
+  organizationId   Uuid
+  sku              String
+  name             String
+  unit             String                     // "box", "each", "ml" ...
+  reorderThreshold Int?
+  isActive         Boolean                    @default(true)
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  stockLevels  InventoryStockLevel[]
+  transactions InventoryTransaction[]
+
+  @@unique([organizationId, sku])
+  @@map("inventory_items")
+}
+
+model InventoryStockLevel {
+  id              Uuid                       @id @default(uuid())
+  organizationId  Uuid
+  inventoryItemId Uuid
+  locationId      Uuid                       // owning location; SHARED pools are aggregated across locations at query time
+  poolType        StockPoolType              @default(ISOLATED)
+  quantityOnHand  Int                        @default(0)
+  updatedAt       temporal.updatedAtString()
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@unique([organizationId, inventoryItemId, locationId], map: "inventory_stock_org_item_loc_key")
+  @@map("inventory_stock_levels")
+}
+
+model InventoryTransaction {
+  id                Uuid                 @id @default(uuid())
+  organizationId    Uuid
+  inventoryItemId   Uuid
+  locationId        Uuid
+  type              StockTransactionType
+  quantityDelta     Int                  // positive for receipts, negative for consumption
+  reason            String?
+  performedByUserId Uuid
+  createdAt         TimestamptzString    @default(now())
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@index([organizationId, inventoryItemId, locationId], name: "inventory_tx_org_item_loc")
+  @@map("inventory_transactions")
+}
+
+/// Billing & Consolidated Invoicing, Insurance Eligibility (Proposal §4.3).
+/// Invoice.scope drives whether billing is split per department or rolled up
+/// into a single statement — same underlying encounter/line-item data either way.
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  VOID
+  WRITTEN_OFF
+}
+
+enum InvoiceScope {
+  DEPARTMENT
+  CONSOLIDATED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  INSURANCE
+  BANK_TRANSFER
+  OTHER
+}
+
+enum EligibilityStatus {
+  PENDING
+  ELIGIBLE
+  INELIGIBLE
+  ERROR
+}
+
+model InsurancePolicy {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  patientId      Uuid
+  payerName      String
+  memberId       String
+  groupNumber    String?
+  isPrimary      Boolean                    @default(true)
+  effectiveFrom  DateString?
+  effectiveTo    DateString?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  eligibilityChecks EligibilityCheck[]
+
+  @@index([organizationId, patientId])
+  @@map("insurance_policies")
+}
+
+model EligibilityCheck {
+  id                Uuid              @id @default(uuid())
+  organizationId    Uuid
+  insurancePolicyId Uuid
+  appointmentId     Uuid?
+  status            EligibilityStatus @default(PENDING)
+  clearinghouseRef  String?
+  checkedAt         TimestamptzString @default(now())
+  rawResponse       Json?             // clearinghouse payload, kept for audit/troubleshooting
+
+  insurancePolicy InsurancePolicy @relation(fields: [insurancePolicyId], references: [id])
+
+  @@index([organizationId, insurancePolicyId], name: "eligibility_org_policy")
+  @@map("eligibility_checks")
+}
+
+model Invoice {
+  id             Uuid                       @id @default(uuid())
+  organizationId Uuid
+  locationId     Uuid
+  departmentId   Uuid?                      // null when scope = CONSOLIDATED
+  patientId      Uuid
+  scope          InvoiceScope               @default(DEPARTMENT)
+  status         InvoiceStatus              @default(DRAFT)
+  currency       String                     @default("USD")
+  subtotalCents  Int                        @default(0)
+  taxCents       Int                        @default(0)
+  totalCents     Int                        @default(0)
+  dueAt          TimestamptzString?
+  issuedAt       TimestamptzString?
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
+  voidedAt       TimestamptzString?
+
+  lineItems LineItem[]
+  payments  Payment[]
+
+  @@index([organizationId, patientId])
+  @@map("invoices")
+}
+
+model LineItem {
+  id             Uuid              @id @default(uuid())
+  organizationId Uuid
+  invoiceId      Uuid
+  encounterId    Uuid?
+  description    String
+  quantity       Int               @default(1)
+  unitPriceCents Int
+  totalCents     Int
+  createdAt      TimestamptzString @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([organizationId, invoiceId])
+  @@map("line_items")
+}
+
+model Payment {
+  id                    Uuid              @id @default(uuid())
+  organizationId        Uuid
+  invoiceId             Uuid
+  method                PaymentMethod
+  amountCents           Int
+  stripePaymentIntentId String?           @unique
+  paidAt                TimestamptzString @default(now())
+  createdAt             TimestamptzString @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([organizationId, invoiceId])
+  @@map("payments")
+}
