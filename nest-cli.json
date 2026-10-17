@@ -7,7 +7,7 @@
     "typeCheck": true,
     "assets": [
       {
-        "include": "prisma/contract.json",
+        "include": "core/database/prisma/contracts/contract.json",
         "outDir": "dist"
       }
     ],

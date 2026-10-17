@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "copy-assets": "node -e \"require('fs').cpSync('src/prisma/contract.json', 'dist/prisma/contract.json')\"",
+   "copy-assets": "node -e \"require('fs').cpSync('src/core/database/prisma/contracts/contract.json', 'dist/core/database/prisma/contracts/contract.json')\"",
     "build": "bun run nest build && bun run copy-assets",
     "start": "bun run nest start",
     "start:dev": "bun run copy-assets && bun run nest start --watch",

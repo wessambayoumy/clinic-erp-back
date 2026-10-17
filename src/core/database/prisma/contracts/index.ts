@@ -1,2 +1,2 @@
 export * from './contract';
-export * from '../core/database/db';
+export * from '@core/database/db';
