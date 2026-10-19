@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-import { PrismaTransaction, TransactionService } from '@common/database/transaction';
+import {
+  PrismaTransaction,
+  TransactionService,
+} from '@common/database/transaction';
 import { BaseRepository } from './base.repository';
 import { Observed } from '@/common/decorators';
 
 /** Tenant-aware repository for the Appointment model owned by this feature. */
-@Observed() 
+@Observed()
 @Injectable()
 export class SchedulingRepository extends BaseRepository<
   Record<string, unknown>,

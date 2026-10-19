@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-   "copy-assets": "node -e \"require('fs').cpSync('src/core/database/prisma/contracts/contract.json', 'dist/core/database/prisma/contracts/contract.json')\"",
+    "copy-assets": "node -e \"require('fs').cpSync('src/core/database/prisma/contracts/contract.json', 'dist/core/database/prisma/contracts/contract.json')\"",
     "build": "bun run nest build && bun run copy-assets",
     "start": "bun run nest start",
     "start:dev": "bun run copy-assets && bun run nest start --watch",
@@ -22,8 +22,11 @@
     "contract:emit": "bun run prisma contract emit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@aws-sdk/lib-storage": "^3.1152.0",
     "@fastify/compress": "^8.3.0",
     "@fastify/helmet": "^12.0.1",
+    "@fastify/multipart": "^10.1.4",
     "@nestjs/common": "^12.0.4",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^12.0.4",

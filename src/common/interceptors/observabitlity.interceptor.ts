@@ -1,6 +1,11 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from "@nestjs/common";
-import { MetricsService, TracingService } from "../modules/observability";
-import { catchError, Observable, tap } from "rxjs";
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
+import { MetricsService, TracingService } from '../modules/observability';
+import { catchError, Observable, tap } from 'rxjs';
 
 @Injectable()
 export class ObservabilityInterceptor implements NestInterceptor {
@@ -17,7 +22,9 @@ export class ObservabilityInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
-        this.metricsService.increment(`${name}_total`, 1, { status: 'success' });
+        this.metricsService.increment(`${name}_total`, 1, {
+          status: 'success',
+        });
         this.tracingService.endSpan(spanId);
       }),
       catchError((error: unknown) => {

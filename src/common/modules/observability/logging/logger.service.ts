@@ -104,9 +104,8 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
     meta?: Record<string, unknown>,
     trace?: string,
   ): LogEntry {
-    const messageString = typeof message === 'string' 
-      ? message 
-      : JSON.stringify(message);
+    const messageString =
+      typeof message === 'string' ? message : JSON.stringify(message);
 
     return {
       timestamp: new Date().toISOString(),
@@ -114,7 +113,11 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
       message: messageString,
       context: context || this.context,
       trace,
-      meta: meta ? (this.redact(meta) as Record<string, unknown>) : (typeof message === 'object' ? this.redact(message) as Record<string, unknown> : undefined),
+      meta: meta
+        ? (this.redact(meta) as Record<string, unknown>)
+        : typeof message === 'object'
+          ? (this.redact(message) as Record<string, unknown>)
+          : undefined,
     };
   }
 

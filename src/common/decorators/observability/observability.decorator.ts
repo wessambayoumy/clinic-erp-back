@@ -13,7 +13,10 @@ function wrap(
   original: (...args: unknown[]) => unknown,
   name: string,
 ): (...args: unknown[]) => Promise<unknown> {
-  async function wrapped(this: ObservableInstance, ...args: unknown[]): Promise<unknown> {
+  async function wrapped(
+    this: ObservableInstance,
+    ...args: unknown[]
+  ): Promise<unknown> {
     const { spanId } = this.tracingService.startSpan(name);
     try {
       const result = await original.apply(this, args);
@@ -43,9 +46,14 @@ function wrap(
 export function Observed(name?: string): MethodDecorator & ClassDecorator {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- decorator target's
   // shape is unknowable at this call site; TS's own decorator signatures require it.
-  return ((target: any, propertyKey?: string | symbol, descriptor?: PropertyDescriptor) => {
+  return ((
+    target: any,
+    propertyKey?: string | symbol,
+    descriptor?: PropertyDescriptor,
+  ) => {
     if (propertyKey !== undefined && descriptor) {
-      const spanName = name ?? `${target.constructor.name}.${String(propertyKey)}`;
+      const spanName =
+        name ?? `${target.constructor.name}.${String(propertyKey)}`;
       descriptor.value = wrap(descriptor.value, spanName);
       return descriptor;
     }
@@ -54,9 +62,13 @@ export function Observed(name?: string): MethodDecorator & ClassDecorator {
     for (const key of Object.getOwnPropertyNames(proto)) {
       if (key === 'constructor') continue;
       const propDescriptor = Object.getOwnPropertyDescriptor(proto, key);
-      if (!propDescriptor || typeof propDescriptor.value !== 'function') continue;
+      if (!propDescriptor || typeof propDescriptor.value !== 'function')
+        continue;
       if (propDescriptor.value[OBSERVED]) continue; // method already carries its own @Observed
-      propDescriptor.value = wrap(propDescriptor.value, `${target.name}.${key}`);
+      propDescriptor.value = wrap(
+        propDescriptor.value,
+        `${target.name}.${key}`,
+      );
       Object.defineProperty(proto, key, propDescriptor);
     }
     return target;

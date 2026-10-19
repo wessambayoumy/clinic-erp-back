@@ -25,7 +25,10 @@ export interface IPrismaDelegate<
 
   create(args: { data: TCreateInput }): Promise<TModel>;
 
-  update(args: { where: TWhereUniqueInput; data: TUpdateInput }): Promise<TModel>;
+  update(args: {
+    where: TWhereUniqueInput;
+    data: TUpdateInput;
+  }): Promise<TModel>;
 
   delete(args: { where: TWhereUniqueInput }): Promise<TModel>;
 }

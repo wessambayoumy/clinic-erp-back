@@ -5,4 +5,5 @@ export enum ConfigEnum {
   database = 'database',
   observability = 'observability',
   redis = 'redis',
+  s3 = 's3',
 }

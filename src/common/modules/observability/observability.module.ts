@@ -7,10 +7,12 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 
 const modules = [LoggerModule, MetricsModule, TracingModule];
 
-const providers = [  {
-      provide: APP_INTERCEPTOR,
-      useClass: ObservabilityInterceptor,
-    },];
+const providers = [
+  {
+    provide: APP_INTERCEPTOR,
+    useClass: ObservabilityInterceptor,
+  },
+];
 
 @Module({
   imports: modules,

@@ -31,4 +31,13 @@ export const ConfigConsts = {
   redis: {
     url: `${ConfigEnum.redis}.url`,
   },
+  s3: {
+    region: `${ConfigEnum.s3}.region`,
+    bucket: `${ConfigEnum.s3}.bucket`,
+    endpoint: `${ConfigEnum.s3}.endpoint`,
+    forcePathStyle: `${ConfigEnum.s3}.forcePathStyle`,
+    accessKeyId: `${ConfigEnum.s3}.accessKeyId`,
+    secretAccessKey: `${ConfigEnum.s3}.secretAccessKey`,
+    maxUploadBytes: `${ConfigEnum.s3}.maxUploadBytes`,
+  },
 };

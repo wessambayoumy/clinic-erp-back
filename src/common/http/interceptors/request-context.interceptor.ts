@@ -45,11 +45,16 @@ interface IAuthenticatedRequest {
 export class RequestContextInterceptor implements NestInterceptor {
   constructor(private readonly requestContextStorage: RequestContextStorage) {}
 
-  public intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  public intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<unknown> {
     const request = context.switchToHttp().getRequest<IAuthenticatedRequest>();
 
     if (!request.user?.organizationId || !request.user.locationId) {
-      throw new UnauthorizedException('Missing tenant context in verified token');
+      throw new UnauthorizedException(
+        'Missing tenant context in verified token',
+      );
     }
 
     const requestContext: RequestContext = {

@@ -7,7 +7,10 @@ import { PrismaService } from '@core/database/prisma/prisma.service';
 
 @Injectable()
 export class RLSService {
-  constructor(private readonly logger: LoggerService, private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Apply RLS context on the given transaction's own connection via
@@ -33,7 +36,10 @@ export class RLSService {
    * here. Swallowing a failed `set_config` would silently return to
    * unscoped queries, which is worse than failing the request.
    */
-  public async applyContext(tx: PrismaTransaction, context: RLSContext): Promise<void> {
+  public async applyContext(
+    tx: PrismaTransaction,
+    context: RLSContext,
+  ): Promise<void> {
     // `tx` has no `.raw` — that namespace only exists on the top-level client.
     // Building the plan here doesn't touch a connection at all (it just
     // assembles SQL text, params, and the row spec); `tx.query(plan)` below
@@ -47,9 +53,9 @@ export class RLSService {
     `
       .returnsRow({ org: 'pg/text@1', loc: 'pg/text@1', usr: 'pg/text@1' })
       .build();
- 
+
     await tx.query(plan);
- 
+
     this.logger.debug(
       `RLS context applied: org=${context.organizationId}, ` +
         `location=${context.locationId ?? 'none'}, user=${context.userId ?? 'none'}`,

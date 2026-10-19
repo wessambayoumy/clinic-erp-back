@@ -4,7 +4,12 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { Catch, ArgumentsHost, ExceptionFilter, HttpException } from '@nestjs/common';
+import {
+  Catch,
+  ArgumentsHost,
+  ExceptionFilter,
+  HttpException,
+} from '@nestjs/common';
 import compress from '@fastify/compress';
 import helmet from '@fastify/helmet';
 
@@ -24,15 +29,16 @@ class AllExceptionsFilter implements ExceptionFilter {
     console.error('=== CAUGHT UNHANDLED EXCEPTION ===', exception);
 
     const httpStatus =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : 500;
+      exception instanceof HttpException ? exception.getStatus() : 500;
 
     const responseBody = {
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: exception instanceof Error ? exception.message : 'Internal server error',
+      message:
+        exception instanceof Error
+          ? exception.message
+          : 'Internal server error',
     };
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
