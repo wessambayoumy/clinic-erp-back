@@ -5,7 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -41,6 +41,8 @@ import { ClinicalWorkflowsModule } from './features/clinical-workflows/clinical-
 import { BillingModule } from './features/billing/billing.module';
 import { InventoryModule } from './features/inventory/inventory.module';
 import { RequestContextStorage } from './common/http/interceptors/request-context.storage';
+import { ErrorInterceptor } from './common/interceptors/error.interceptor';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 @Module({
   imports: [
@@ -85,6 +87,13 @@ import { RequestContextStorage } from './common/http/interceptors/request-contex
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    { provide: APP_INTERCEPTOR,
+       useClass: ErrorInterceptor 
+    },
+    { provide: APP_INTERCEPTOR,
+       useClass: ResponseInterceptor
+    },
+
   ],
 })
 export class AppModule implements NestModule {
