@@ -9,18 +9,16 @@ import type { Observable } from 'rxjs';
 
 import type { IApiResponse } from '@shared/interfaces';
 
-
-
-
 /**
  * Wraps every successful response in `{ success: true, data }`.
  * Streamed files are passed through untouched so downloads keep working.
  * Errors are not handled here, use a global exception filter for those.
  */
 @Injectable()
-export class ResponseInterceptor<T>
-  implements NestInterceptor<T, IApiResponse<T> | StreamableFile>
-{
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  IApiResponse<T> | StreamableFile
+> {
   /**
    * Maps the handler result into the standard response envelope.
    *
@@ -32,10 +30,12 @@ export class ResponseInterceptor<T>
     _context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<IApiResponse<T> | StreamableFile> {
-    return next.handle().pipe(
-      map((data: T): IApiResponse<T> | StreamableFile =>
-        data instanceof StreamableFile ? data : { success: true, data },
-      ),
-    );
+    return next
+      .handle()
+      .pipe(
+        map((data: T): IApiResponse<T> | StreamableFile =>
+          data instanceof StreamableFile ? data : { success: true, data },
+        ),
+      );
   }
 }

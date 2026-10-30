@@ -1,4 +1,4 @@
-import { AllowedMimeTypeEnum } from "@/shared/enums/storage";
+import { AllowedMimeTypeEnum } from '@/shared/enums/storage';
 
 /**
  * Options for `UploadGuardTransform`.

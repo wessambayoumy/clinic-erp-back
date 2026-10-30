@@ -54,7 +54,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return response;
     }
 
-    if (typeof response === 'object' && response !== null && 'message' in response) {
+    if (
+      typeof response === 'object' &&
+      response !== null &&
+      'message' in response
+    ) {
       const { message } = response;
 
       if (typeof message === 'string' || Array.isArray(message)) {

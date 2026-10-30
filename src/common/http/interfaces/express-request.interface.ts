@@ -1,4 +1,4 @@
-import { AuthenticatedUser } from '../../interfaces/auth/authenticated-user.interface';
+import { AuthenticatedUser } from '@/shared';
 import { RequestContext } from './request-context.interface';
 
 declare module 'express-serve-static-core' {

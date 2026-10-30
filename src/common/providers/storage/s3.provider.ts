@@ -3,7 +3,6 @@ import { S3_CLIENT } from '@/shared/constants/storage';
 import { S3Client } from '@aws-sdk/client-s3';
 import type { Provider } from '@nestjs/common';
 
-
 import type { IS3Config } from '@shared/interfaces/storage';
 
 /**
@@ -21,7 +20,10 @@ export const s3ClientProvider: Provider<S3Client> = {
       forcePathStyle: config.forcePathStyle,
       credentials:
         config.accessKeyId !== undefined && config.secretAccessKey !== undefined
-          ? { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey }
+          ? {
+              accessKeyId: config.accessKeyId,
+              secretAccessKey: config.secretAccessKey,
+            }
           : undefined,
     }),
 };

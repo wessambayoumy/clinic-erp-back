@@ -1,10 +1,20 @@
 import { Transform } from 'node:stream';
 import type { TransformCallback } from 'node:stream';
 
-import { BadRequestException, PayloadTooLargeException, UnsupportedMediaTypeException } from '@nestjs/common';
+import {
+  BadRequestException,
+  PayloadTooLargeException,
+  UnsupportedMediaTypeException,
+} from '@nestjs/common';
 
-import type { IFileSignature, IUploadGuardOptions } from '@shared/interfaces/storage';
-import { FILE_SIGNATURES, SIGNATURE_HEADER_BYTES } from '@/shared/constants/storage';
+import type {
+  IFileSignature,
+  IUploadGuardOptions,
+} from '@shared/interfaces/storage';
+import {
+  FILE_SIGNATURES,
+  SIGNATURE_HEADER_BYTES,
+} from '@/shared/constants/storage';
 
 /**
  * Pass-through stream that guards an upload while it streams to S3:
@@ -43,11 +53,19 @@ export class UploadGuardTransform extends Transform {
    * @param _encoding - Unused (buffer mode).
    * @param callback - Completion callback.
    */
-  public override _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
+  public override _transform(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    callback: TransformCallback,
+  ): void {
     this.bytesReceived += chunk.length;
 
     if (this.bytesReceived > this.options.maxSizeBytes) {
-      callback(new PayloadTooLargeException(`File exceeds the maximum size of ${this.options.maxSizeBytes} bytes`));
+      callback(
+        new PayloadTooLargeException(
+          `File exceeds the maximum size of ${this.options.maxSizeBytes} bytes`,
+        ),
+      );
       return;
     }
 
@@ -95,7 +113,11 @@ export class UploadGuardTransform extends Transform {
     const header = Buffer.concat(this.headerChunks, this.headerLength);
 
     if (!this.matchesDeclaredType(header)) {
-      callback(new UnsupportedMediaTypeException('File content does not match its declared type'));
+      callback(
+        new UnsupportedMediaTypeException(
+          'File content does not match its declared type',
+        ),
+      );
       return;
     }
 
@@ -117,7 +139,9 @@ export class UploadGuardTransform extends Transform {
       return false;
     }
 
-    return alternatives.some((segments) => segments.every((segment) => this.matchesSegment(header, segment)));
+    return alternatives.some((segments) =>
+      segments.every((segment) => this.matchesSegment(header, segment)),
+    );
   }
 
   /**
@@ -130,6 +154,9 @@ export class UploadGuardTransform extends Transform {
   private matchesSegment(header: Buffer, segment: IFileSignature): boolean {
     const end = segment.offset + segment.bytes.length;
 
-    return header.length >= end && header.subarray(segment.offset, end).equals(Buffer.from(segment.bytes));
+    return (
+      header.length >= end &&
+      header.subarray(segment.offset, end).equals(Buffer.from(segment.bytes))
+    );
   }
 }

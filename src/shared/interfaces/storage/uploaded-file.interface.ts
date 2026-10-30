@@ -1,5 +1,4 @@
-import { AllowedMimeTypeEnum } from "@/shared/enums/storage";
-
+import { AllowedMimeTypeEnum } from '@/shared/enums/storage';
 
 /**
  * Result of a successful upload. Persist `key` on your entity.

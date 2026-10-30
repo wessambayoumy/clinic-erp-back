@@ -90,7 +90,11 @@ export class HashService implements OnModuleInit {
     const { pepper } = this.argon2Config;
 
     try {
-      return await argon2.verify(digest, plain, pepper ? { secret: pepper } : undefined);
+      return await argon2.verify(
+        digest,
+        plain,
+        pepper ? { secret: pepper } : undefined,
+      );
     } catch (error: unknown) {
       this.logger.warn(
         `Argon2 verification failed to run: ${error instanceof Error ? error.name : 'UnknownError'}`,
@@ -111,7 +115,7 @@ export class HashService implements OnModuleInit {
     const { memoryCost, timeCost, parallelism } = this.argon2Config;
 
     return argon2.needsRehash(digest, {
-      type: argon2.argon2id,
+      version: argon2.argon2id,
       memoryCost,
       timeCost,
       parallelism,
@@ -140,7 +144,9 @@ export class HashService implements OnModuleInit {
     const expected = Buffer.from(this.hashToken(token), 'hex');
     const actual = Buffer.from(digest, 'hex');
 
-    return actual.length === expected.length && timingSafeEqual(expected, actual);
+    return (
+      actual.length === expected.length && timingSafeEqual(expected, actual)
+    );
   }
 
   /**
@@ -151,12 +157,18 @@ export class HashService implements OnModuleInit {
    * @param minimum Smallest accepted value.
    * @returns The validated integer.
    */
-  private readInteger(key: SecurityConfigKeyEnum, fallback: number, minimum: number): number {
+  private readInteger(
+    key: SecurityConfigKeyEnum,
+    fallback: number,
+    minimum: number,
+  ): number {
     const raw = this.configService.get<string | number>(key);
     const value = raw === undefined || raw === '' ? fallback : Number(raw);
 
     if (!Number.isInteger(value) || value < minimum) {
-      throw new Error(`${key} must be an integer greater than or equal to ${String(minimum)}`);
+      throw new Error(
+        `${key} must be an integer greater than or equal to ${String(minimum)}`,
+      );
     }
 
     return value;
@@ -169,10 +181,14 @@ export class HashService implements OnModuleInit {
    * @returns Pepper bytes, or null when no pepper is configured.
    */
   private readPepper(): Buffer | null {
-    const raw = this.configService.get<string>(SecurityConfigKeyEnum.HASH_PEPPER);
+    const raw = this.configService.get<string>(
+      SecurityConfigKeyEnum.HASH_PEPPER,
+    );
 
     if (raw === undefined || raw === '') {
-      this.logger.warn(`${SecurityConfigKeyEnum.HASH_PEPPER} is not set; hashing without a pepper`);
+      this.logger.warn(
+        `${SecurityConfigKeyEnum.HASH_PEPPER} is not set; hashing without a pepper`,
+      );
       return null;
     }
 

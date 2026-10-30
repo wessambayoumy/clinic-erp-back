@@ -13,7 +13,6 @@ import { LoggerService } from './common/modules/observability/logging/logger.ser
 import { AppModule } from './app.module.js';
 import { ConfigConsts } from './config/config.consts';
 
-
 /** Configures and starts the Fastify HTTP server. */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(

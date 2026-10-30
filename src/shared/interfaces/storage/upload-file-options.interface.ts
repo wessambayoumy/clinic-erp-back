@@ -1,7 +1,6 @@
 import { AllowedMimeTypeEnum, StorageFolderEnum } from '@/shared/enums/storage';
 import type { Readable } from 'node:stream';
 
-
 /**
  * Input for `S3Service.upload`.
  */

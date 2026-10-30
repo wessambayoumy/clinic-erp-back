@@ -7,7 +7,6 @@ export * from './filters';
 export * from './guards';
 export * from './health';
 export * from './http';
-export * from './interfaces';
 export * from './modules/observability';
 export * from './services';
 export * from './strategies';

@@ -87,13 +87,8 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
-    { provide: APP_INTERCEPTOR,
-       useClass: ErrorInterceptor 
-    },
-    { provide: APP_INTERCEPTOR,
-       useClass: ResponseInterceptor
-    },
-
+    { provide: APP_INTERCEPTOR, useClass: ErrorInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],
 })
 export class AppModule implements NestModule {

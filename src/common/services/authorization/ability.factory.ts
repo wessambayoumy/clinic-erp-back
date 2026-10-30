@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { AuthenticatedUser } from '../../interfaces/auth/authenticated-user.interface';
-import { AppAbility } from '../../../shared/types/ability.type';
+import { AuthenticatedUser } from '@/shared';
+import { AppAbility } from '@/shared/types/ability.type';
 
 @Injectable()
 export class AbilityFactory {

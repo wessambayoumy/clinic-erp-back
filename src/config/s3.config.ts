@@ -31,7 +31,10 @@ export const s3Config = registerAs(ConfigEnum.s3, (): IS3Config => {
     throw new Error('AWS_REGION and AWS_S3_BUCKET must be set');
   }
 
-  const maxUploadBytes = Number.parseInt(process.env.S3_MAX_UPLOAD_BYTES ?? '', 10);
+  const maxUploadBytes = Number.parseInt(
+    process.env.S3_MAX_UPLOAD_BYTES ?? '',
+    10,
+  );
 
   return {
     region,
@@ -40,6 +43,9 @@ export const s3Config = registerAs(ConfigEnum.s3, (): IS3Config => {
     forcePathStyle: process.env.AWS_S3_FORCE_PATH_STYLE === 'true',
     accessKeyId: readOptional(process.env.AWS_ACCESS_KEY_ID),
     secretAccessKey: readOptional(process.env.AWS_SECRET_ACCESS_KEY),
-    maxUploadBytes: Number.isNaN(maxUploadBytes) || maxUploadBytes <= 0 ? S3_DEFAULT_MAX_UPLOAD_BYTES : maxUploadBytes,
+    maxUploadBytes:
+      Number.isNaN(maxUploadBytes) || maxUploadBytes <= 0
+        ? S3_DEFAULT_MAX_UPLOAD_BYTES
+        : maxUploadBytes,
   };
 });

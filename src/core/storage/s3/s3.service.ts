@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { pipeline, Readable } from 'node:stream';
 
-import { DeleteObjectCommand, GetObjectCommand, NoSuchKey, S3Client, ServerSideEncryption } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  NoSuchKey,
+  S3Client,
+  ServerSideEncryption,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import {
   HttpException,
@@ -34,7 +40,7 @@ import type {
 } from '@shared/interfaces/storage';
 import { ConfigService } from '@nestjs/config';
 import { UploadGuardTransform } from '@/common/guards/stream/stream.guard';
-import { ConfigConsts } from '@/config/config.consts';    
+import { ConfigConsts } from '@/config/config.consts';
 
 /**
  * Streams files through the API to S3 (no presigned URLs).
@@ -81,7 +87,9 @@ export class S3Service implements OnModuleDestroy {
     const key = this.buildKey(options.organizationId, options.folder, mimeType);
     const guard = new UploadGuardTransform({
       mimeType,
-      maxSizeBytes: options.maxSizeBytes ?? this.config.getOrThrow<number>(ConfigConsts.s3.maxUploadBytes),
+      maxSizeBytes:
+        options.maxSizeBytes ??
+        this.config.getOrThrow<number>(ConfigConsts.s3.maxUploadBytes),
     });
 
     // pipeline() propagates source errors (e.g. client abort) into the guard, which fails the upload.
@@ -103,7 +111,9 @@ export class S3Service implements OnModuleDestroy {
         ContentType: mimeType,
         ServerSideEncryption: ServerSideEncryption.AES256,
         Metadata: {
-          [S3_ORIGINAL_FILENAME_METADATA_KEY]: this.encodeFilename(options.originalFilename),
+          [S3_ORIGINAL_FILENAME_METADATA_KEY]: this.encodeFilename(
+            options.originalFilename,
+          ),
         },
       },
     });
@@ -132,23 +142,35 @@ export class S3Service implements OnModuleDestroy {
    * @returns The body stream with its content type, size and original filename.
    * @throws NotFoundException when the object does not exist or belongs to another tenant.
    */
-  public async download(organizationId: string, key: string): Promise<IS3DownloadResult> {
+  public async download(
+    organizationId: string,
+    key: string,
+  ): Promise<IS3DownloadResult> {
     this.assertKeyBelongsToTenant(organizationId, key);
 
     try {
-      const response = await this.client.send(new GetObjectCommand({ Bucket: this.config.getOrThrow<string>(ConfigConsts.s3.bucket), Key: key }));
+      const response = await this.client.send(
+        new GetObjectCommand({
+          Bucket: this.config.getOrThrow<string>(ConfigConsts.s3.bucket),
+          Key: key,
+        }),
+      );
 
       if (!(response.Body instanceof Readable)) {
         throw new InternalServerErrorException('Unexpected S3 response body');
       }
 
-      const encodedFilename = response.Metadata?.[S3_ORIGINAL_FILENAME_METADATA_KEY];
+      const encodedFilename =
+        response.Metadata?.[S3_ORIGINAL_FILENAME_METADATA_KEY];
 
       return {
         stream: response.Body,
         mimeType: response.ContentType ?? S3_FALLBACK_MIME_TYPE,
         size: response.ContentLength,
-        originalFilename: encodedFilename === undefined ? undefined : this.decodeFilename(encodedFilename),
+        originalFilename:
+          encodedFilename === undefined
+            ? undefined
+            : this.decodeFilename(encodedFilename),
       };
     } catch (error: unknown) {
       if (error instanceof NoSuchKey) {
@@ -170,7 +192,12 @@ export class S3Service implements OnModuleDestroy {
     this.assertKeyBelongsToTenant(organizationId, key);
 
     try {
-      await this.client.send(new DeleteObjectCommand({ Bucket: this.config.getOrThrow<string>(ConfigConsts.s3.bucket), Key: key }));
+      await this.client.send(
+        new DeleteObjectCommand({
+          Bucket: this.config.getOrThrow<string>(ConfigConsts.s3.bucket),
+          Key: key,
+        }),
+      );
     } catch (error: unknown) {
       throw this.toHttpException(error, 'File deletion failed');
     }
@@ -184,7 +211,8 @@ export class S3Service implements OnModuleDestroy {
    */
   private resolveMimeType(options: IUploadFileOptions): AllowedMimeTypeEnum {
     const declared = options.mimeType.toLowerCase();
-    const allowed = options.allowedMimeTypes ?? Object.values(AllowedMimeTypeEnum);
+    const allowed =
+      options.allowedMimeTypes ?? Object.values(AllowedMimeTypeEnum);
     const match = allowed.find((candidate) => candidate === declared);
 
     if (match === undefined) {
@@ -203,13 +231,23 @@ export class S3Service implements OnModuleDestroy {
    * @param mimeType - Verified MIME type.
    * @returns The object key.
    */
-  private buildKey(organizationId: string, folder: StorageFolderEnum, mimeType: AllowedMimeTypeEnum): string {
+  private buildKey(
+    organizationId: string,
+    folder: StorageFolderEnum,
+    mimeType: AllowedMimeTypeEnum,
+  ): string {
     const now = new Date();
     const year = String(now.getUTCFullYear());
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const extension = MIME_EXTENSIONS.get(mimeType) ?? 'bin';
 
-    return [organizationId, folder, year, month, `${randomUUID()}.${extension}`].join('/');
+    return [
+      organizationId,
+      folder,
+      year,
+      month,
+      `${randomUUID()}.${extension}`,
+    ].join('/');
   }
 
   /**
@@ -245,7 +283,10 @@ export class S3Service implements OnModuleDestroy {
    * @returns base64url of the (truncated) filename.
    */
   private encodeFilename(filename: string): string {
-    return Buffer.from(filename.slice(0, S3_MAX_FILENAME_LENGTH), 'utf8').toString('base64url');
+    return Buffer.from(
+      filename.slice(0, S3_MAX_FILENAME_LENGTH),
+      'utf8',
+    ).toString('base64url');
   }
 
   /**
@@ -270,7 +311,10 @@ export class S3Service implements OnModuleDestroy {
       return error;
     }
 
-    this.logger.error(message, error instanceof Error ? error.stack : undefined);
+    this.logger.error(
+      message,
+      error instanceof Error ? error.stack : undefined,
+    );
 
     return new InternalServerErrorException(message);
   }

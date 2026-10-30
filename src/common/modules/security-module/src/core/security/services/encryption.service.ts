@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  hkdfSync,
+  randomBytes,
+} from 'node:crypto';
 
 import {
   Injectable,
@@ -46,10 +51,14 @@ export class EncryptionService implements OnModuleInit {
    * Loads and validates the master key at bootstrap.
    */
   onModuleInit(): void {
-    const encoded = this.configService.get<string>(SecurityConfigKeyEnum.ENCRYPTION_MASTER_KEY);
+    const encoded = this.configService.get<string>(
+      SecurityConfigKeyEnum.ENCRYPTION_MASTER_KEY,
+    );
 
     if (encoded === undefined || encoded === '') {
-      throw new Error(`${SecurityConfigKeyEnum.ENCRYPTION_MASTER_KEY} is required`);
+      throw new Error(
+        `${SecurityConfigKeyEnum.ENCRYPTION_MASTER_KEY} is required`,
+      );
     }
 
     const key = Buffer.from(encoded, 'base64');
@@ -72,13 +81,21 @@ export class EncryptionService implements OnModuleInit {
    */
   encrypt(plaintext: string, context: string): string {
     const iv = randomBytes(ENCRYPTION_IV_LENGTH_BYTES);
-    const cipher = createCipheriv(ENCRYPTION_ALGORITHM, this.deriveKey(context), iv, {
-      authTagLength: ENCRYPTION_AUTH_TAG_LENGTH_BYTES,
-    });
+    const cipher = createCipheriv(
+      ENCRYPTION_ALGORITHM,
+      this.deriveKey(context),
+      iv,
+      {
+        authTagLength: ENCRYPTION_AUTH_TAG_LENGTH_BYTES,
+      },
+    );
 
     cipher.setAAD(Buffer.from(context, 'utf8'));
 
-    const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const ciphertext = Buffer.concat([
+      cipher.update(plaintext, 'utf8'),
+      cipher.final(),
+    ]);
 
     return this.serialize({ iv, tag: cipher.getAuthTag(), ciphertext });
   }
@@ -94,14 +111,22 @@ export class EncryptionService implements OnModuleInit {
   decrypt(payload: string, context: string): string {
     try {
       const { iv, tag, ciphertext } = this.parse(payload);
-      const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, this.deriveKey(context), iv, {
-        authTagLength: ENCRYPTION_AUTH_TAG_LENGTH_BYTES,
-      });
+      const decipher = createDecipheriv(
+        ENCRYPTION_ALGORITHM,
+        this.deriveKey(context),
+        iv,
+        {
+          authTagLength: ENCRYPTION_AUTH_TAG_LENGTH_BYTES,
+        },
+      );
 
       decipher.setAAD(Buffer.from(context, 'utf8'));
       decipher.setAuthTag(tag);
 
-      return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+      return Buffer.concat([
+        decipher.update(ciphertext),
+        decipher.final(),
+      ]).toString('utf8');
     } catch (error: unknown) {
       this.logger.error(
         `Decryption failed: ${error instanceof Error ? error.name : 'UnknownError'}`,
@@ -166,10 +191,17 @@ export class EncryptionService implements OnModuleInit {
     const iv = Buffer.from(ivSegment ?? '', 'base64url');
     const tag = Buffer.from(tagSegment ?? '', 'base64url');
 
-    if (iv.length !== ENCRYPTION_IV_LENGTH_BYTES || tag.length !== ENCRYPTION_AUTH_TAG_LENGTH_BYTES) {
+    if (
+      iv.length !== ENCRYPTION_IV_LENGTH_BYTES ||
+      tag.length !== ENCRYPTION_AUTH_TAG_LENGTH_BYTES
+    ) {
       throw new Error('Malformed payload');
     }
 
-    return { iv, tag, ciphertext: Buffer.from(ciphertextSegment ?? '', 'base64url') };
+    return {
+      iv,
+      tag,
+      ciphertext: Buffer.from(ciphertextSegment ?? '', 'base64url'),
+    };
   }
 }
