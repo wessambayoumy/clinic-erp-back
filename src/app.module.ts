@@ -25,7 +25,7 @@ import { ObservabilityModule } from './common/modules/observability/observabilit
 import { EventsModule } from './common/events/events.module';
 
 // Database services
-import { RLSService } from './common/database/rls/rls.service';
+import { RLSModule } from './common/database/rls/rls.module';
 import { TransactionService } from './common/database/transaction/transaction.service';
 
 // Middleware
@@ -59,6 +59,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
     PrismaModule,
     RedisModule,
     BullMQModule,
+    RLSModule,
 
     // Common/shared services
     AuthModule,
@@ -80,7 +81,6 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
   controllers: [AppController],
   providers: [
     AppService,
-    RLSService,
     TransactionService,
     RequestContextStorage,
     {

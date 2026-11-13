@@ -4639,6 +4639,13 @@
                   "kind": "scalar"
                 }
               },
+              "emailVerified": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "firstName": {
                 "nullable": true,
                 "type": {
@@ -4700,6 +4707,9 @@
                 },
                 "email": {
                   "column": "email"
+                },
+                "emailVerified": {
+                  "column": "emailVerified"
                 },
                 "firstName": {
                   "column": "firstName"
@@ -8078,6 +8088,15 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "emailVerified": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
                 "firstName": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -8401,7 +8420,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "152a242e1573ceae884007ec233c3d6a17277d1a30707794dbc7a820b2c85237"
+    "storageHash": "8f826821693adee7282ae80e3c69ddd3f108efa34dd3c98ca227a651391ca7bc"
   },
   "execution": {
     "executionHash": "4f3114336aa8ba760ac68262c52aecc46158dc1dcfa338386e392ae87f2b37bd",

@@ -6,6 +6,8 @@ import authConfig from './auth.config';
 import redisConfig from './redis.config';
 import bullmqConfig from './bullmq.config';
 import observabilityConfig from './observability.config';
+import emailConfig from './email.config';
+import { envSchema } from './config.schema';
 
 @Global()
 @Module({
@@ -19,7 +21,12 @@ import observabilityConfig from './observability.config';
         redisConfig,
         bullmqConfig,
         observabilityConfig,
+        emailConfig,
       ],
+      validate: (config: Record<string, unknown>): Record<string, unknown> => ({
+        ...config,
+        ...envSchema.parse(config),
+      }),
       envFilePath: '.env.dev',
       cache: true,
     }),

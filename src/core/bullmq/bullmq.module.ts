@@ -1,28 +1,20 @@
-import { Module, Logger } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 
-// BullMQ module - to be wired up when @nestjs/bullmq is installed
+/** Registers the shared BullMQ connection over the application's Redis instance. */
 @Module({
-  providers: [
-    {
-      provide: 'BULLMQ_CONFIG',
+  imports: [
+    BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const logger = new Logger('BullMQModule');
-        const redisUrl = configService.get<string>('bullmq.redisUrl');
-
-        if (!redisUrl) {
-          logger.warn('BullMQ Redis URL not configured');
-        }
-
-        return {
-          connection: {
-            url: redisUrl,
-          },
-        };
-      },
-    },
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          url: configService.getOrThrow<string>('bullmq.redisUrl'),
+          maxRetriesPerRequest: null,
+        },
+      }),
+    }),
   ],
-  exports: ['BULLMQ_CONFIG'],
+  exports: [BullModule],
 })
 export class BullMQModule {}

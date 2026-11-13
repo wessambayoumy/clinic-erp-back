@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './email';
 export * from './billing';
 export * from './clinical-workflows';
 export * from './encounters';

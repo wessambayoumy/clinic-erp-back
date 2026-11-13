@@ -1,31 +1,61 @@
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-import {
-  PrismaTransaction,
-  TransactionService,
-} from '@common/database/transaction';
-import { BaseRepository } from './base.repository';
+import type { PrismaTransaction } from '@common/database/transaction/transaction.service';
 import { Observed } from '@/common/decorators';
 
 /** Tenant-aware repository for the User model owned by this feature. */
 @Observed()
 @Injectable()
-export class IdentityRepository extends BaseRepository<
-  Record<string, unknown>,
-  { id: string },
-  Record<string, unknown>,
-  Record<string, unknown>,
-  Record<string, unknown>
-> {
-  public constructor(
-    transactionService: TransactionService,
-    logger: LoggerService,
-  ) {
-    super(transactionService, logger);
+export class IdentityRepository {
+  /** Finds an organization account by normalized email within the supplied transaction. */
+  public findAccount(
+    tx: PrismaTransaction,
+    organizationId: string,
+    email: string,
+  ): Promise<unknown> {
+    return tx.orm.public.User.first({ organizationId, email });
   }
 
-  /** Selects the User collection from the scoped transaction. */
-  protected getCollection(tx: PrismaTransaction): object {
-    return (tx.orm.public as Record<string, object>).User;
+  /** Creates an unverified account within the caller's tenant-scoped transaction. */
+  public createAccount(
+    tx: PrismaTransaction,
+    input: {
+      organizationId: string;
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ): Promise<unknown> {
+    return tx.orm.public.User.create({ ...input, emailVerified: false });
+  }
+
+  /** Marks the account email verified within the caller's transaction. */
+  public updateEmailVerified(
+    tx: PrismaTransaction,
+    id: string,
+    organizationId: string,
+  ): Promise<unknown> {
+    return tx.orm.public.User.where({ id, organizationId }).update({
+      emailVerified: true,
+    });
+  }
+
+  /** Updates an account password within the caller's transaction. */
+  public updatePassword(
+    tx: PrismaTransaction,
+    id: string,
+    organizationId: string,
+    password: string,
+  ): Promise<unknown> {
+    return tx.orm.public.User.where({ id, organizationId }).update({ password });
+  }
+
+  /** Finds a clinic location by ID within its owning organization. */
+  public findLocation(
+    tx: PrismaTransaction,
+    organizationId: string,
+    locationId: string,
+  ): Promise<unknown> {
+    return tx.orm.public.Location.first({ id: locationId, organizationId });
   }
 }

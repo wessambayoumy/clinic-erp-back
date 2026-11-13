@@ -21,6 +21,15 @@ export const ConfigConsts = {
   database: {
     url: `${ConfigEnum.database}.url`,
   },
+  email: {
+    from: `${ConfigEnum.email}.from`,
+    transport: `${ConfigEnum.email}.transport`,
+    smtpUrl: `${ConfigEnum.email}.smtpUrl`,
+    otpHashSecret: `${ConfigEnum.email}.otpHashSecret`,
+    bcryptRounds: `${ConfigEnum.email}.bcryptRounds`,
+    codeMaxAttempts: `${ConfigEnum.email}.codeMaxAttempts`,
+    requestLimitPerHour: `${ConfigEnum.email}.requestLimitPerHour`,
+  },
   observability: {
     loggingLevel: `${ConfigEnum.observability}.loggingLevel`,
     loggingFormat: `${ConfigEnum.observability}.loggingFormat`,

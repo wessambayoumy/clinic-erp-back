@@ -6,6 +6,7 @@ export * from './config.enum';
 export * from './config.schema';
 export * from './configuration.module';
 export * from './database.config';
+export * from './email.config';
 export * from './generate_secret';
 export * from './observability.config';
 export * from './redis.config';
