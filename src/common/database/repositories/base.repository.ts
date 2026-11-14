@@ -1,8 +1,6 @@
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-import {
-  PrismaTransaction,
-  TransactionService,
-} from '@common/database/transaction';
+import { TransactionService } from '@common/database/transaction';
+import type { PrismaTransaction } from '@/shared/types';
 import type {
   IBaseRepository,
   IPaginatedResult,

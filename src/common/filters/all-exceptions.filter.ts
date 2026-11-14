@@ -4,19 +4,20 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { ExceptionCodeEnum } from '@shared/enums/http/exception-code.enum';
 
 /** Sends consistent HTTP error responses and hides unexpected internal details. */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
-
   /** Creates the filter with the HTTP adapter selected by Nest. */
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+  constructor(
+    private readonly httpAdapterHost: HttpAdapterHost,
+    private readonly logger: LoggerService,
+  ) {}
 
   /** Converts an application exception into the shared API error shape. */
   catch(exception: unknown, host: ArgumentsHost): void {

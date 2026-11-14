@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { RLSContext } from './rls.context';
-import { RLS_CONTEXT_VARS } from './rls.constants';
 import { LoggerService } from '@common/modules/observability/logging/logger.service';
-import { PrismaTransaction } from '../transaction/transaction.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
+import { RLS_CONTEXT_VARS } from '@/shared/constants/database';
+import type { IRLSContext } from '@/shared/interfaces/database';
+import type { PrismaTransaction } from '@/shared/types';
 
 @Injectable()
 export class RLSService {
@@ -38,7 +38,7 @@ export class RLSService {
    */
   public async applyContext(
     tx: PrismaTransaction,
-    context: RLSContext,
+    context: IRLSContext,
   ): Promise<void> {
     // `tx` has no `.raw` — that namespace only exists on the top-level client.
     // Building the plan here doesn't touch a connection at all (it just

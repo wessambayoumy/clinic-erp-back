@@ -2,21 +2,18 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Mailer } from '@nestjs/mail';
 
-import { OtpCacheOutcomeEnum } from '@/core/external/email/otp/otp-cache-outcome.enum';
-import type { IOtpChallenge } from '@/core/external/email/otp/otp-challenge.interface';
-import { OtpCacheService } from '@/core/external/email/otp/otp-cache.service';
-import { OtpCredentialService } from '@/core/external/email/otp/otp-credential.service';
+import { OtpCacheOutcomeEnum } from '@/shared/enums/email';
+import type { IOtpChallenge } from '@/shared/interfaces/email';
 import type {
   ILoginNoticeMailData,
   IOtpMailData,
   IPasswordChangedMailData,
   IStaffInvitationMailData,
-} from '@/core/external/email/interfaces';
+} from '@/shared/interfaces/email';
 import {
   AccountOtpMail,
   LoginNoticeMail,
@@ -24,21 +21,23 @@ import {
   StaffInvitationMail,
 } from '@/core/external/email/templates';
 import { EmailOtpPurposeEnum } from '@/shared/enums/auth';
-
-const OTP_TTL_SECONDS = 300;
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
+import {
+  OTP_TTL_SECONDS,
+  OtpCacheService,
+  OtpCredentialService,
+} from './otp';
 
 /** Sends account emails and coordinates Redis-backed one-time codes. */
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
-
   constructor(
     private readonly mailer: Mailer,
     private readonly otpCredentials: OtpCredentialService,
     private readonly otpCache: OtpCacheService,
+    private readonly logger: LoggerService,
   ) {}
-
-  /** Issues a five-minute OTP, stores only its bcrypt digest, and emails the code. */
+  /** Issues a five-minute OTP, stores only its Argon2id digest, and emails the code. */
   public async issueOtp(
     email: string,
     purpose: EmailOtpPurposeEnum,

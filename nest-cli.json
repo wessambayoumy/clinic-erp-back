@@ -15,7 +15,8 @@
     "builder": {
       "type": "swc",
       "options": {
-        "swcrcPath": ".swcrc"
+        "swcrcPath": ".swcrc",
+        "ignore": ["**/*.spec.ts", "**/*.e2e-spec.ts"]
       }
     }
   }

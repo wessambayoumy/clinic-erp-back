@@ -7,10 +7,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AbilityFactory } from '../../services/authorization/ability.factory';
-import {
-  CHECK_ABILITY_KEY,
-  CheckAbilityParams,
-} from '../../decorators/authorization/check-ability.decorator';
+import { CHECK_ABILITY_KEY } from '@/shared/constants/authorization';
+import type { ICheckAbilityParams } from '@/shared/interfaces/authorization';
 
 @Injectable()
 export class AbilityGuard implements CanActivate {
@@ -20,7 +18,7 @@ export class AbilityGuard implements CanActivate {
   ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requirements = this.reflector.get<CheckAbilityParams[]>(
+    const requirements = this.reflector.get<ICheckAbilityParams[]>(
       CHECK_ABILITY_KEY,
       context.getHandler(),
     );

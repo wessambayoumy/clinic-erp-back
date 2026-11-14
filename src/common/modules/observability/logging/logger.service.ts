@@ -1,10 +1,11 @@
 import {
   ConsoleLogger,
   Injectable,
-  Logger,
   LoggerService as NestLoggerService,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { LogLevelEnum } from '@/shared/enums/observability';
+import type { ILogEntry } from '@/shared/interfaces/observability';
 
 /** Fields redacted from log output regardless of nesting depth. */
 const SENSITIVE_KEYS = new Set([
@@ -21,25 +22,6 @@ const SENSITIVE_KEYS = new Set([
   'creditCard',
   'cvv',
 ]);
-
-enum LogLevelEnum {
-  INFO = 'info',
-  ERROR = 'error',
-  WARN = 'warn',
-  DEBUG = 'debug',
-  VERBOSE = 'verbose',
-  FATAL = 'fatal',
-}
-
-/** Shape of every structured log line this service emits. */
-interface LogEntry {
-  timestamp: string;
-  level: LogLevelEnum;
-  message: string;
-  context?: string;
-  trace?: string;
-  meta?: Record<string, unknown>;
-}
 
 /**
  * Structured JSON logger for NestJS, implementing the framework's
@@ -83,7 +65,7 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
    * Serializes a log entry to JSON, falling back to a safe placeholder
    * if the payload contains circular references or other non-serializable data.
    */
-  private serialize(entry: LogEntry): string {
+  private serialize(entry: ILogEntry): string {
     try {
       return JSON.stringify(entry);
     } catch {
@@ -93,7 +75,7 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
 
   /**
    * It's a single factory function that takes the level plus the four possible pieces of a log call,
-   * returns a fully-formed LogEntry object timestamped, context-resolved, and with meta redacted if present.
+   * returns a fully-formed ILogEntry object timestamped, context-resolved, and with meta redacted if present.
    * Every public method (log, error, warn, debug, verbose, fatal) now just calls build(...)
    * passes the result to serialize() then the appropriate console.
    */
@@ -103,7 +85,7 @@ export class LoggerService extends ConsoleLogger implements NestLoggerService {
     context?: string,
     meta?: Record<string, unknown>,
     trace?: string,
-  ): LogEntry {
+  ): ILogEntry {
     const messageString =
       typeof message === 'string' ? message : JSON.stringify(message);
 

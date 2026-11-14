@@ -1,1 +1,1 @@
-export * from './ability.type';
+export * from './database';

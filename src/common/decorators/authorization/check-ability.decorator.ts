@@ -1,11 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
 
-export interface CheckAbilityParams {
-  action: string;
-  subject: string;
-}
+import { CHECK_ABILITY_KEY } from '@/shared/constants/authorization';
+import type { ICheckAbilityParams } from '@/shared/interfaces/authorization';
 
-export const CHECK_ABILITY_KEY = 'check_ability';
-
-export const CheckAbility = (...requirements: CheckAbilityParams[]) =>
+export const CheckAbility = (...requirements: ICheckAbilityParams[]) =>
   SetMetadata(CHECK_ABILITY_KEY, requirements);

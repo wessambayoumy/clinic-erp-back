@@ -11,7 +11,7 @@ import helmet from '@fastify/helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { LoggerService } from './common/modules/observability/logging/logger.service.js';
 import { AppModule } from './app.module.js';
-import { ConfigConsts } from './config/config.consts';
+import { ConfigConsts } from '@/shared/constants/config';
 
 /** Configures and starts the Fastify HTTP server. */
 async function bootstrap(): Promise<void> {
@@ -25,7 +25,9 @@ async function bootstrap(): Promise<void> {
   app.useLogger(loggerService);
 
   const httpAdapterHost = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapterHost, loggerService),
+  );
 
   const port = configService.getOrThrow<number>(ConfigConsts.app.port);
   const apiPrefix = configService.getOrThrow<string>(

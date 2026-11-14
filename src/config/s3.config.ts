@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 import type { IS3Config } from '@shared/interfaces/storage';
-import { ConfigEnum } from './config.enum';
+import { ConfigEnum } from '@/shared/enums/config';
 import { S3_DEFAULT_MAX_UPLOAD_BYTES } from '@/shared/constants/storage';
 
 /**

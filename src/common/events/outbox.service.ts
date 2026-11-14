@@ -1,19 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { DomainEvent } from './domain-event.interface';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
+import { IDomainEvent } from '@/shared/interfaces/events';
 
 @Injectable()
 export class OutboxService {
-  private readonly logger = new Logger(OutboxService.name);
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   /**
    * Save domain event to outbox table
    * The outbox pattern ensures events are persisted atomically with the domain entity
    * A separate process will later publish these events
    */
-  async saveEvent(event: DomainEvent): Promise<void> {
+  async saveEvent(event: IDomainEvent): Promise<void> {
     try {
       // In a real implementation, this would insert into an outbox table
       // For now, we'll just log it
@@ -32,7 +34,7 @@ export class OutboxService {
   /**
    * Save multiple events to outbox atomically
    */
-  async saveEvents(events: DomainEvent[]): Promise<void> {
+  async saveEvents(events: IDomainEvent[]): Promise<void> {
     try {
       for (const event of events) {
         await this.saveEvent(event);
@@ -53,7 +55,7 @@ export class OutboxService {
    * Retrieve unpublished events from outbox
    * Used by event publishing service
    */
-  async getUnpublishedEvents(limit: number = 100): Promise<DomainEvent[]> {
+  async getUnpublishedEvents(limit: number = 100): Promise<IDomainEvent[]> {
     // In a real implementation, this would query the outbox table
     // For now, return empty array
     return [];

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { RequestContext } from './../interfaces/request-context.interface';
+import type { IRequestContext } from '@/shared/interfaces/http';
 
 /**
  * Thin wrapper around Node's `AsyncLocalStorage`, scoped to one
@@ -11,7 +11,7 @@ import type { RequestContext } from './../interfaces/request-context.interface';
  */
 @Injectable()
 export class RequestContextStorage {
-  private readonly storage: AsyncLocalStorage<RequestContext> =
+  private readonly storage: AsyncLocalStorage<IRequestContext> =
     new AsyncLocalStorage();
 
   /**
@@ -19,7 +19,7 @@ export class RequestContextStorage {
    * entire async duration of that callback (including anything it awaits,
    * schedules, or subscribes to) — not just its synchronous body.
    */
-  public run<T>(context: RequestContext, callback: () => T): T {
+  public run<T>(context: IRequestContext, callback: () => T): T {
     return this.storage.run(context, callback);
   }
 
@@ -28,7 +28,7 @@ export class RequestContextStorage {
    * `undefined` if called outside any request (e.g. app bootstrap, a
    * scheduled job with no interceptor in its path).
    */
-  public getContext(): RequestContext | undefined {
+  public getContext(): IRequestContext | undefined {
     return this.storage.getStore();
   }
 }

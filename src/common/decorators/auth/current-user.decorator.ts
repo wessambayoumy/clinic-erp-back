@@ -4,10 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { AuthenticatedUser } from '@/shared';
+import type { IAuthenticatedUser } from '@/shared';
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): AuthenticatedUser => {
+  (data: unknown, ctx: ExecutionContext): IAuthenticatedUser => {
     const request = ctx.switchToHttp().getRequest<Request>();
     if (!request.user) {
       throw new UnauthorizedException('Authenticated user is required');

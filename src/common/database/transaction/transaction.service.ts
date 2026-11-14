@@ -2,24 +2,9 @@ import { LoggerService } from '@/common/modules/observability/logging/logger.ser
 import { Injectable } from '@nestjs/common';
 import { RLSService } from '@common/database/rls/rls.service';
 import { PrismaService } from '@core/database/prisma/prisma.service';
-import { db } from '@/core/database/db';
 import { RequestContextStorage } from '@common/http/interceptors/request-context.storage';
 import { Observed } from '@/common/decorators';
-
-/**
- * The transaction handle Prisma ORM 8 passes into `db.transaction(callback)`.
- * Prisma exports no name for this type, so it's derived from the client's
- * own `transaction` method signature — the derivation the Prisma docs
- * themselves recommend for this exact situation.
- *
- * Lives here (not in common/repositories) so both BaseRepository and
- * TransactionService can import it without creating a repositories ↔
- * transaction import cycle.
- */
-
-export type PrismaTransaction = Parameters<
-  Parameters<typeof db.transaction>[0]
->[0];
+import type { PrismaTransaction } from '@/shared/types';
 
 @Observed()
 @Injectable()

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from './logging/logger.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { TracingModule } from './tracing/tracing.module';
-import { ObservabilityInterceptor } from '@/common/interceptors/observabitlity.interceptor';
+import { ObservabilityInterceptor } from '@/common/interceptors/observability.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
 const modules = [LoggerModule, MetricsModule, TracingModule];

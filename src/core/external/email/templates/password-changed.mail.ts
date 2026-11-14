@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { html, type Mailable } from '@nestjs/mail';
 
-import type { IPasswordChangedMailData } from '../interfaces';
+import type { IPasswordChangedMailData } from '@/shared/interfaces/email';
 
 /** Renders a security notice after an account password changes. */
 @Injectable()

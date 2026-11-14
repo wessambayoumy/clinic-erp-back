@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
-import { generateSecret } from './generate_secret';
-import { ConfigEnum } from './config.enum';
+import { generateSecret } from './generate-secret';
+import { ConfigEnum } from '@/shared/enums/config';
 
 export default registerAs(ConfigEnum.auth, () => {
   const isProduction = process.env.NODE_ENV === 'production';

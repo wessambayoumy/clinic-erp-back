@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { AuthenticatedUser } from '@/shared';
+import type { IAuthenticatedUser } from '@/shared';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -16,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: Record<string, unknown>): AuthenticatedUser {
+  validate(payload: Record<string, unknown>): IAuthenticatedUser {
     return {
       id: String(payload.sub),
       email: String(payload.email),

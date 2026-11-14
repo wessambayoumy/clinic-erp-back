@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { AuthenticatedUser } from '@/shared';
-import { AppAbility } from '@/shared/types/ability.type';
+import type { IAppAbility, IAuthenticatedUser } from '@/shared';
 
 @Injectable()
 export class AbilityFactory {
-  createForUser(user: AuthenticatedUser): AppAbility {
+  createForUser(user: IAuthenticatedUser): IAppAbility {
     const permissions: Record<string, string[]> = {
       admin: ['manage', 'all'],
       provider: [

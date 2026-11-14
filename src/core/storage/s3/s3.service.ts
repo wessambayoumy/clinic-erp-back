@@ -14,7 +14,6 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
@@ -40,7 +39,8 @@ import type {
 } from '@shared/interfaces/storage';
 import { ConfigService } from '@nestjs/config';
 import { UploadGuardTransform } from '@/common/guards/stream/stream.guard';
-import { ConfigConsts } from '@/config/config.consts';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
+import { ConfigConsts } from '@/shared/constants/config';
 
 /**
  * Streams files through the API to S3 (no presigned URLs).
@@ -52,15 +52,15 @@ import { ConfigConsts } from '@/config/config.consts';
  */
 @Injectable()
 export class S3Service implements OnModuleDestroy {
-  private readonly logger = new Logger(S3Service.name);
-
   /**
    * @param client - Shared S3 client.
    * @param config - Resolved S3 configuration.
+   * @param logger - Structured application logger.
    */
   public constructor(
     @Inject(S3_CLIENT) private readonly client: S3Client,
     private readonly config: ConfigService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

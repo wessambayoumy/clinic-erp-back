@@ -8,21 +8,10 @@ import {
 import { randomUUID } from 'node:crypto';
 import { Observable } from 'rxjs';
 import { RequestContextStorage } from './request-context.storage';
-import type { RequestContext } from '../interfaces/request-context.interface';
-
-/**
- * Shape of `req.user` after the JWT auth guard/strategy has already run.
- * TODO: replace with whatever your actual JWT strategy attaches — field
- * names here (`sub`, `organizationId`, `locationId`) are a guess.
- */
-interface IAuthenticatedRequest {
-  user?: {
-    sub: string;
-    organizationId: string;
-    locationId: string;
-  };
-  id?: string;
-}
+import type {
+  IAuthenticatedRequest,
+  IRequestContext,
+} from '@/shared/interfaces/http';
 
 /**
  * Populates `RequestContextStorage` for the lifetime of each request,
@@ -40,6 +29,10 @@ interface IAuthenticatedRequest {
  * context. Fails closed — better a rejected request than one silently
  * running with no `RequestContext`, which would make every later
  * `TransactionService.run()` call throw anyway, just later and less clearly.
+ *
+ * Requests with no verified user at all — `@Public()` routes, which
+ * `GlobalAuthGuard` lets through without attaching one — pass straight
+ * through: there is no tenant to scope, so there is nothing to populate.
  */
 @Injectable()
 export class RequestContextInterceptor implements NestInterceptor {
@@ -51,15 +44,17 @@ export class RequestContextInterceptor implements NestInterceptor {
   ): Observable<unknown> {
     const request = context.switchToHttp().getRequest<IAuthenticatedRequest>();
 
-    if (!request.user?.organizationId || !request.user.locationId) {
+    if (!request.user) return next.handle();
+
+    if (!request.user.organizationId || !request.user.locationId) {
       throw new UnauthorizedException(
         'Missing tenant context in verified token',
       );
     }
 
-    const requestContext: RequestContext = {
+    const requestContext: IRequestContext = {
       requestId: request.id ?? randomUUID(),
-      userId: request.user.sub,
+      userId: request.user.id,
       organizationId: request.user.organizationId,
       locationId: request.user.locationId,
       timestamp: new Date(),

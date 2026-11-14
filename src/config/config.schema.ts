@@ -30,7 +30,6 @@ export const envSchema = z.object({
   MAIL_FROM_NAME: z.string().trim().min(1).max(100).default('Clinic ERP'),
   SMTP_URL: z.string().url().optional(),
   EMAIL_OTP_HASH_SECRET: z.string().min(32),
-  EMAIL_BCRYPT_ROUNDS: z.coerce.number().int().min(12).max(16).default(12),
   EMAIL_CODE_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(10).default(5),
   EMAIL_REQUEST_LIMIT_PER_HOUR: z.coerce.number().int().min(1).default(5),
 }).superRefine((config, context) => {

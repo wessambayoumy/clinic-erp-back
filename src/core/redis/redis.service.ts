@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, RedisClientType } from 'redis';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-import { ConfigConsts } from '@/config/config.consts';
+import { ConfigConsts } from '@/shared/constants/config';
 
 @Injectable()
 export class RedisService implements OnModuleInit {

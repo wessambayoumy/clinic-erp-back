@@ -1,20 +1,14 @@
 // common/decorators/observability/observed.decorator.ts
-import { MetricsService } from '@/common/modules/observability/metrics/metrics.service';
-import { TracingService } from '@/common/modules/observability/tracing/tracing.service';
+import type { IObservableInstance } from '@/shared/interfaces/observability';
 
 const OBSERVED = Symbol('observed');
-
-interface ObservableInstance {
-  tracingService: TracingService;
-  metricsService?: MetricsService;
-}
 
 function wrap(
   original: (...args: unknown[]) => unknown,
   name: string,
 ): (...args: unknown[]) => Promise<unknown> {
   async function wrapped(
-    this: ObservableInstance,
+    this: IObservableInstance,
     ...args: unknown[]
   ): Promise<unknown> {
     const { spanId } = this.tracingService.startSpan(name);

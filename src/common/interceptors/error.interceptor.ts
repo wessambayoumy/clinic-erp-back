@@ -3,7 +3,6 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
-  Logger,
 } from '@nestjs/common';
 import type {
   CallHandler,
@@ -13,6 +12,7 @@ import type {
 import { catchError, throwError } from 'rxjs';
 import type { Observable } from 'rxjs';
 
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import type { IApiErrorResponse } from '@shared/interfaces';
 
 /**
@@ -23,7 +23,7 @@ import type { IApiErrorResponse } from '@shared/interfaces';
  */
 @Injectable()
 export class ErrorInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(ErrorInterceptor.name);
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Catches errors from the handler and rethrows them as standardized HttpExceptions.

@@ -1,5 +1,5 @@
-export * from './auth.module';
-export * from './authorization.module';
+export * from './modules/auth/authentication.module';
+export * from './modules/auth/authorization.module';
 export * from './database';
 export * from './decorators';
 export * from './events';
@@ -7,6 +7,8 @@ export * from './filters';
 export * from './guards';
 export * from './health';
 export * from './http';
-export * from './modules/observability';
+export * from './interceptors';
+export * from './modules';
+export * from './providers';
 export * from './services';
 export * from './strategies';

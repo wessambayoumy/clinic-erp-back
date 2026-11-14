@@ -1,11 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RedisService } from '@/core/redis/redis.service';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 
 @Injectable()
 export class RedisHealthIndicator {
-  private readonly logger = new Logger(RedisHealthIndicator.name);
-
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async isHealthy(): Promise<{ status: string; error?: string }> {
     try {

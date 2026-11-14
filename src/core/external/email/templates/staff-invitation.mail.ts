@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { html, type Mailable } from '@nestjs/mail';
 
-import type { IStaffInvitationMailData } from '../interfaces';
+import type { IStaffInvitationMailData } from '@/shared/interfaces/email';
 
 /** Renders an invitation message for a new staff member. */
 @Injectable()

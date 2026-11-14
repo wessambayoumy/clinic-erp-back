@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 
 import { Request } from 'express';
-import { AuthenticatedUser } from '@/shared';
+import type { IAuthenticatedUser } from '@/shared';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -25,7 +25,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   validate(
     _request: Request,
     payload: Record<string, unknown>,
-  ): Promise<AuthenticatedUser> {
+  ): Promise<IAuthenticatedUser> {
     return Promise.resolve({
       id: String(payload.sub),
       email: String(payload.email),

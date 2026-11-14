@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
+import { ConfigConsts } from '@/shared';
 
 /** Registers the shared BullMQ connection over the application's Redis instance. */
 @Module({
@@ -9,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         connection: {
-          url: configService.getOrThrow<string>('bullmq.redisUrl'),
+          url: configService.getOrThrow<string>(ConfigConsts.redis.url),
           maxRetriesPerRequest: null,
         },
       }),

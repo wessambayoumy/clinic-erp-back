@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { html, type Mailable } from '@nestjs/mail';
 
-import type { ILoginNoticeMailData } from '../interfaces';
+import type { ILoginNoticeMailData } from '@/shared/interfaces/email';
 
 /** Renders the security notice sent after a successful sign-in. */
 @Injectable()

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { html, type Mailable } from '@nestjs/mail';
 
 import { EmailOtpPurposeEnum } from '@/shared/enums/auth';
-import type { IOtpMailData } from '../interfaces';
+import type { IOtpMailData } from '@/shared/interfaces/email';
 
 /** Renders sign-up, sign-in, and password-recovery one-time-code messages. */
 @Injectable()

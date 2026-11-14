@@ -5,7 +5,7 @@ import {
   type MailModuleOptions,
 } from '@nestjs/mail';
 
-import { ConfigConsts } from '@/config/config.consts';
+import { ConfigConsts } from '@/shared/constants/config';
 
 /** Creates the local file or configured SMTP transport for account email. */
 export function createEmailModuleOptions(

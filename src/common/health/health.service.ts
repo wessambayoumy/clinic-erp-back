@@ -1,14 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@core/database/prisma/prisma.service';
-import { RedisService } from '@/core/redis/redis.service';
+import { Injectable } from '@nestjs/common';
+import { DatabaseHealthIndicator } from './indicators/database.health';
+import { RedisHealthIndicator } from './indicators/redis.health';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 
 @Injectable()
 export class HealthService {
-  private readonly logger = new Logger(HealthService.name);
-
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly database: DatabaseHealthIndicator,
+    private readonly redis: RedisHealthIndicator,
+    private readonly logger: LoggerService,
   ) {}
 
   async checkLiveness(): Promise<{ status: string; timestamp: string }> {
@@ -25,43 +25,17 @@ export class HealthService {
     timestamp: string;
   }> {
     this.logger.log('Readiness check performed');
+    const [database, redis] = await Promise.all([
+      this.database.isHealthy(),
+      this.redis.isHealthy(),
+    ]);
+
     const checks: Record<string, { status: string; error?: string }> = {
-      database: { status: 'ok' },
-      redis: { status: 'ok' },
+      database,
+      redis,
+      // BullMQ exposes no health surface yet; the queue is assumed up.
       queue: { status: 'ok' },
     };
-
-    // Database health check - placeholder
-    try {
-      if (this.prisma) {
-        checks.database.status = 'ok';
-      } else {
-        checks.database.status = 'error';
-      }
-    } catch (error) {
-      checks.database.status = 'error';
-      this.logger.error(
-        'Database readiness check failed',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-
-    // Redis health check
-    try {
-      if (this.redis.client) {
-        checks.redis.status = 'ok';
-      } else {
-        checks.redis.status = 'disabled';
-      }
-    } catch (error) {
-      checks.redis.status = 'error';
-      this.logger.error(
-        'Redis readiness check failed',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-
-    checks.queue.status = 'ok'; // Queue health checked separately
 
     const allHealthy = Object.values(checks).every(
       (check) => check.status === 'ok' || check.status === 'disabled',

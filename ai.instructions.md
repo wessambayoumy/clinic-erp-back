@@ -156,9 +156,9 @@ If the AI encounters an existing raw string union while touching a file, flag it
 - **Auth**:
   - JWT access + refresh token pair; short-lived access tokens (≤15 min), refresh tokens rotated and stored hashed.
   - Global `AuthGuard` registered via `APP_GUARD`, with an explicit `@Public()` decorator for opt-out routes — default-deny, not default-allow.
-  - Passwords hashed with `argon2` or `bcrypt` (cost factor ≥ 12), never reversible encryption.
+  - Passwords hashed with `argon2` (Argon2id, via `HashService`), never reversible encryption.
   - `@types/passport-jwt` is present — use `passport-jwt` strategy with `AuthGuard('jwt')` or wrap it behind a custom global guard; keep the JWT secret/issuer/audience validated, not just the signature.
-  - No secrets, tokens, or PII in logs. Use the built-in `Logger`, never `console.log`.
+  - No secrets, tokens, or PII in logs. Use the app's `LoggerService` (§5), never `console.*`.
 - **SQL injection**: Prisma's query builder parameterizes by default — never drop to `$queryRawUnsafe`/`$executeRawUnsafe` with interpolated user input. If raw SQL is unavoidable, use `$queryRaw`/`$executeRaw` tagged templates only.
 - **Mass assignment**: DTOs are the only accepted shape for input — never pass `req.body` directly to `create()`/`update()`.
 - **Environment/config**: use `@nestjs/config` with a validated schema (`Joi` or `class-validator`) at bootstrap; fail fast on missing required env vars. Never commit `.env` files.
@@ -191,7 +191,7 @@ If the AI encounters an existing raw string union while touching a file, flag it
 - Repository pattern: controllers → services → repositories → schema/model. Controllers never touch the ODM/ORM directly.
 - Constructor-based dependency injection only — no manual instantiation (`new SomeService()`).
 - Every public method in a service/controller has an explicit return type — never inferred `Promise<any>`.
-- Use `Logger` (scoped per-class: `new Logger(UserService.name)`) instead of `console.*`.
+- Use the app's custom `LoggerService` (`@/common/modules/observability/logging/logger.service`) instead of `console.*` or Nest's built-in `Logger`. Inject it via the constructor (`private readonly logger: LoggerService`) — do not call `new Logger(...)`. It is exposed globally by `LoggerModule` (`@Global()`), so no per-module import is needed.
 - Lifecycle hooks (`OnModuleInit`, `OnModuleDestroy`) used for setup/teardown instead of ad-hoc `constructor` side effects.
 - Never model a closed set of values as a raw string-literal union — always use an enum per §1.5.
 
@@ -212,7 +212,7 @@ This project lints with a flat config (`eslint.config.mjs`) combining `typescrip
 - **Imports (`eslint-plugin-import`)**: no import cycles (`import/no-cycle`) — this is critical given the mandatory barrel-file (`index.ts`) architecture in §1.3; check for cycles before wiring up new barrel re-exports. Imports ordered and grouped (builtin → external → internal → parent → sibling → index) with alphabetization and blank lines between groups.
 - **Barrel files (`**/index.ts`)**: named re-exports only — `export default` is banned in barrels.
 - **Filenames (`unicorn/filename-case`)**: kebab-case, matching the `.service.ts`/`.controller.ts`/etc. suffix convention in §1.2.
-- **`no-console`**: raw `console.*` is a lint error everywhere except test files — always route through Nest's `Logger` per §5.
+- **`no-console`**: raw `console.*` is a lint error everywhere except test files — always route through the app's `LoggerService` per §5.
 - **NestJS-decorated files** (`*.controller.ts`, `*.service.ts`, `*.module.ts`, `*.gateway.ts`, `*.guard.ts`, `*.interceptor.ts`, `*.strategy.ts`, `*.filter.ts`) get relaxed rules for empty constructors and static-only classes, since these are normal Nest/DI idioms — do not "fix" these patterns away.
 - **Test files** (`*.spec.ts`, `*.e2e-spec.ts`, `/test/**`) relax `no-explicit-any`, non-null assertions, unsafe assignment, duplicate-string, and `no-console` — do not over-engineer test code to satisfy production-strictness rules.
 - Prettier runs last in the config and disables any stylistic rule that would conflict with it — never hand-format in a way that fights Prettier (spacing, quotes, trailing commas); let `prettier --write` own that.

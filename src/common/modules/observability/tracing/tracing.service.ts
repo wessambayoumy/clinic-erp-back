@@ -2,13 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'node:crypto';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-
-/** Internal record for an in-flight span. */
-interface ActiveSpan {
-  name: string;
-  startedAt: number; // ms, from performance.now()
-  parentSpanId?: string;
-}
+import type { IActiveSpan } from '@/shared/interfaces/observability';
 
 /**
  * Lightweight span tracking backed by debug logs.
@@ -22,7 +16,7 @@ interface ActiveSpan {
 @Injectable()
 export class TracingService {
   private readonly enabled: boolean;
-  private readonly activeSpans = new Map<string, ActiveSpan>();
+  private readonly activeSpans = new Map<string, IActiveSpan>();
 
   constructor(
     private readonly configService: ConfigService,

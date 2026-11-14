@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 
 import { EmailService } from '@/common/services/email';
+import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { EmailJobNameEnum, EmailQueueEnum } from '@/shared/enums';
 import type { IAccountEmailNoticeJob } from '@/shared/interfaces/email';
 
@@ -10,9 +11,10 @@ import type { IAccountEmailNoticeJob } from '@/shared/interfaces/email';
 @Injectable()
 @Processor(EmailQueueEnum.ACCOUNT_NOTIFICATIONS)
 export class EmailNotificationProcessor extends WorkerHost {
-  private readonly logger = new Logger(EmailNotificationProcessor.name);
-
-  constructor(private readonly email: EmailService) {
+  constructor(
+    private readonly email: EmailService,
+    private readonly logger: LoggerService,
+  ) {
     super();
   }
 

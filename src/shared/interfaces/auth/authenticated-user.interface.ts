@@ -1,4 +1,4 @@
-export interface AuthenticatedUser {
+export interface IAuthenticatedUser {
   id: string;
   email: string;
   organizationId: string;

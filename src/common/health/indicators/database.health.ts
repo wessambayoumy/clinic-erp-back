@@ -1,11 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-
-export interface IHealthStatus {
-  status: string;
-  error?: string;
-}
+import type { IHealthStatus } from '@/shared/interfaces/health';
 
 @Injectable()
 export class DatabaseHealthIndicator {
@@ -18,7 +14,7 @@ export class DatabaseHealthIndicator {
     try {
       const plan = this.prisma.client.raw.sql`SELECT 1`.affectedCount().build();
       await this.prisma.client.runtime().execute(plan);
-      console.log('Database health check passed');
+      this.logger.log('Database health check passed');
       return { status: 'ok' };
     } catch (error) {
       this.logger.error(

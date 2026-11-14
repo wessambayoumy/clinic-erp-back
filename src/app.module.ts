@@ -4,45 +4,25 @@ import {
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { minutes, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 // Configuration
 import { ConfigurationModule } from './config/configuration.module';
-
-// core
-import { PrismaModule } from './core/database/prisma/prisma.module';
-import { RedisModule } from './core/redis/redis.module';
-import { BullMQModule } from './core/bullmq/bullmq.module';
-
-// Common services
-import { AuthModule } from './common/auth.module';
-import { AuthorizationModule } from './common/authorization.module';
-import { HealthModule } from './common/health/health.module';
-import { ObservabilityModule } from './common/modules/observability/observability.module';
-import { EventsModule } from './common/events/events.module';
-
 // Database services
-import { RLSModule } from './common/database/rls/rls.module';
 import { TransactionService } from './common/database/transaction/transaction.service';
-
 // Middleware
 import { RequestIdMiddleware } from './common/http/middleware/request-id.middleware';
 
-// Business modules
-import { IdentityModule } from './features/identity/identity.module';
-import { OrganizationModule } from './features/organization/organization.module';
-import { PatientsModule } from './features/patients/patients.module';
-import { SchedulingModule } from './features/scheduling/scheduling.module';
-import { EncountersModule } from './features/encounters/encounters.module';
-import { ClinicalWorkflowsModule } from './features/clinical-workflows/clinical-workflows.module';
-import { BillingModule } from './features/billing/billing.module';
-import { InventoryModule } from './features/inventory/inventory.module';
+import { FeaturesModule } from './features';
+import { RequestContextInterceptor } from './common/http/interceptors/request-context.interceptor';
 import { RequestContextStorage } from './common/http/interceptors/request-context.storage';
 import { ErrorInterceptor } from './common/interceptors/error.interceptor';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { CoreModules } from './core/core.modules';
+import { CommonModules } from './common/common.modules';
 
 @Module({
   imports: [
@@ -50,43 +30,22 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
     ConfigurationModule,
     ThrottlerModule.forRoot([
       {
-        ttl: 60_000,
+        ttl: minutes(1),
         limit: 100,
       },
     ]),
 
-    // Core core
-    PrismaModule,
-    RedisModule,
-    BullMQModule,
-    RLSModule,
-
-    // Common/shared services
-    AuthModule,
-    AuthorizationModule,
-    HealthModule,
-    ObservabilityModule,
-    EventsModule,
-
-    // Business bounded contexts
-    IdentityModule,
-    OrganizationModule,
-    PatientsModule,
-    SchedulingModule,
-    EncountersModule,
-    ClinicalWorkflowsModule,
-    BillingModule,
-    InventoryModule,
+    CoreModules,
+    CommonModules,
+    FeaturesModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     TransactionService,
     RequestContextStorage,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: RequestContextInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ErrorInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
   ],

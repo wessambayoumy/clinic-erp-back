@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "TM_REPORT",
+  "model_id": "clinic-erp-back-api",
+  "revision": "r01",
+  "parent_revision": null,
+  "status": "partial",
+  "analysis_depth": "quick",
+  "architecture_ids": ["api", "multi-tenant-saas"],
+  "selected_methods": [],
+  "processed_inputs": [
+    { "id": "IN-001", "locator": "threat-model/2026-11-14-quick-api/SYSTEM_UNDER_REVIEW.md", "access": "read", "coverage": "read in this run; working-tree revision unknown", "reason": null }
+  ],
+  "unprocessed_inputs": [
+    { "id": "IN-002", "locator": "prisma/", "access": "skipped", "coverage": "not inspected in this run", "reason": "RLS read from src/common/database/rls/rls.service.ts instead; policy SQL unverified" },
+    { "id": "IN-003", "locator": "src/common/events/", "access": "skipped", "coverage": "not inspected in this run", "reason": "bounded pass; BullMQ worker paths unverified" }
+  ],
+  "attachments": [],
+  "continuation": null,
+  "model": {
+    "scope": {
+      "description": "Architecture selection for the clinic-erp-back API: choose one primary architecture and bounded secondaries for a security review of request admission, authentication, authorization and tenant separation.",
+      "in_scope": ["external HTTP request admission", "authentication guard and opt-out", "authorization guard and ability model", "email-OTP auth workflows", "JWT issuance/verification", "tenant-scoped PostgreSQL access and RLS", "S3 storage path", "environment/secret configuration"],
+      "out_of_scope": ["non-auth feature controllers (none exist)", "BullMQ worker bodies", "SMTP/file mail transport", "observability exporters", "CI/CD and infrastructure", "runtime behaviour"],
+      "objectives": ["Name the architecture whose boundary and lifecycle dominate the API security decision", "Record bounded secondaries that add a distinct boundary"],
+      "assumptions": ["The project builds a NestJS 11 service on Fastify exposing only the six auth routes today", "Postgres RLS is the intended tenant-isolation mechanism"],
+      "limitations": ["Selection only: no threats, controls, treatments, risks or decisions were produced in this stage; those arrive in the quick analysis.", "Prompt bodies for api and multi-tenant-saas were read from the library, but no library registry/revision was read, so identities were matched by filename only and prompt availability is observed within that limited scope."]
+    },
+    "evidence": [
+      { "id": "EV-001", "locator": "src/main.ts:17-55", "source_kind": "repository", "source_revision": null, "date": null, "statement": "Bootstrap registers helmet, compress, an exception filter and CORS from config; it registers no global validation pipe and no trustProxy, and listens on 0.0.0.0.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "", "excerpt": null, "derived_from": [] },
+      { "id": "EV-002", "locator": "src/app.module.ts:27-59", "source_kind": "repository", "source_revision": null, "date": null, "statement": "Global throttler (100/60s), ThrottlerGuard as APP_GUARD, three interceptors, and RequestIdMiddleware on *path.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "", "excerpt": null, "derived_from": [] },
+      { "id": "EV-003", "locator": "src/features/auth/auth.controller.ts:20-78", "source_kind": "repository", "source_revision": null, "date": null, "statement": "Six routes, all @Public(), each with a per-route @Throttle of 5-10 per 60s.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "", "excerpt": null, "derived_from": [] },
+      { "id": "EV-006", "locator": "src (search: ValidationPipe|APP_PIPE|useGlobalPipes)", "source_kind": "repository", "source_revision": null, "date": null, "statement": "No matches: no global or route-level validation pipe is registered, so DTO decorators are inert.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "Static search only; runtime behaviour not executed.", "excerpt": null, "derived_from": [] },
+      { "id": "EV-014", "locator": "src (search: APP_GUARD|AbilityGuard|CheckAbility)", "source_kind": "repository", "source_revision": null, "date": null, "statement": "AbilityGuard is only provided/exported by authorization.module.ts; it is never registered as APP_GUARD and no route uses @UseGuards or @CheckAbility.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "Static search only.", "excerpt": null, "derived_from": [] },
+      { "id": "EV-024", "locator": "src/common/modules/auth/authentication.module.ts:17-46", "source_kind": "repository", "source_revision": null, "date": null, "statement": "AuthenticationModule registers APP_GUARD GlobalAuthGuard and CommonModules imports it, so the global JWT auth guard is active.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "", "excerpt": null, "derived_from": [] },
+      { "id": "EV-020", "locator": "src/common/database/rls/rls.service.ts:39-63", "source_kind": "repository", "source_revision": null, "date": null, "statement": "RLS context is applied transaction-locally via set_config(..., true) on the caller's transaction handle using parameterised SQL.", "status": "observation", "purpose": "implementation", "access": "read", "limitations": "The rls-policies.sql that reads these settings was not inspected.", "excerpt": null, "derived_from": [] }
+    ],
+    "system": {
+      "assets": [
+        { "id": "A-001", "kind": "asset", "description": "Tenant clinical/administrative records in PostgreSQL, isolated by RLS.", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "Primary data asset the tenancy boundary protects.", "related_refs": ["B-002", "B-006"] },
+        { "id": "A-002", "kind": "asset", "description": "Account credential digests (Argon2id password hashes).", "basis": "observed", "evidence_refs": ["EV-007"], "rationale": "Compromise enables account takeover.", "related_refs": [] },
+        { "id": "A-003", "kind": "asset", "description": "Issued JWT access tokens for clinic staff.", "basis": "observed", "evidence_refs": ["EV-007", "EV-016"], "rationale": "Bearer credential for authenticated requests.", "related_refs": ["B-001"] }
+      ],
+      "actors": [
+        { "id": "AC-001", "kind": "actor", "description": "Anonymous internet caller reaching the @Public auth routes.", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated entry actor.", "related_refs": ["EP-001"] },
+        { "id": "AC-002", "kind": "actor", "description": "Authenticated clinic staff holding a JWT bearer token.", "basis": "observed", "evidence_refs": ["EV-024"], "rationale": "Authenticated external actor.", "related_refs": ["EP-004"] },
+        { "id": "AC-003", "kind": "actor", "description": "Administrator role referenced by the ability model.", "basis": "observed", "evidence_refs": ["EV-014"], "rationale": "Privileged role in the authorization design.", "related_refs": [] }
+      ],
+      "data": [
+        { "id": "D-001", "kind": "data", "description": "Auth request bodies (register/login/verify/forgot/reset DTOs).", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Untrusted input crossing B-001.", "related_refs": [] },
+        { "id": "D-004", "kind": "data", "description": "JWT claims: sub, email, organizationId, locationId, roles.", "basis": "observed", "evidence_refs": ["EV-007"], "rationale": "Identity and tenant claims carried per request.", "related_refs": [] }
+      ],
+      "zones": [
+        { "id": "Z-001", "kind": "zone", "description": "Untrusted internet.", "basis": "observed", "evidence_refs": ["EV-001"], "rationale": "External network zone.", "related_refs": [] },
+        { "id": "Z-002", "kind": "zone", "description": "NestJS/Fastify API process listening on 0.0.0.0.", "basis": "observed", "evidence_refs": ["EV-001"], "rationale": "Trusted application zone.", "related_refs": [] },
+        { "id": "Z-003", "kind": "zone", "description": "PostgreSQL with RLS holding all tenants.", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "Data zone shared across tenants.", "related_refs": [] }
+      ],
+      "boundaries": [
+        { "id": "B-001", "kind": "boundary", "description": "Internet to API boundary crossed by every HTTP request.", "basis": "observed", "evidence_refs": ["EV-001", "EV-003"], "rationale": "Primary external crossing where admission controls apply.", "related_refs": [], "side_refs": ["Z-001", "Z-002"], "owner_architecture": "api", "gap_refs": [] },
+        { "id": "B-002", "kind": "boundary", "description": "API to PostgreSQL boundary carrying tenant-scoped queries.", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "Data access crossing governed by RLS.", "related_refs": [], "side_refs": ["Z-002", "Z-003"], "owner_architecture": "api", "gap_refs": [] },
+        { "id": "B-006", "kind": "boundary", "description": "Tenant-to-tenant isolation boundary enforced inside PostgreSQL by RLS.", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "The separation the multi-tenant lens exists to examine.", "related_refs": [], "side_refs": ["Z-003", "A-001"], "owner_architecture": "multi-tenant-saas", "gap_refs": ["G-006"] }
+      ],
+      "flows": [
+        { "id": "F-001", "kind": "flow", "description": "Anonymous register request crosses B-001 into POST /auth/register.", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated admission path.", "related_refs": [], "source_ref": "AC-001", "target_ref": "EP-001", "data_refs": ["D-001"], "boundary_refs": ["B-001"], "gap_refs": [] },
+        { "id": "F-003", "kind": "flow", "description": "Tenant-scoped query crosses B-002 with RLS context applied.", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "Data access path.", "related_refs": [], "source_ref": "Z-002", "target_ref": "Z-003", "data_refs": ["D-004"], "boundary_refs": ["B-002"], "gap_refs": [] },
+        { "id": "F-007", "kind": "flow", "description": "Successful OTP verification issues a JWT to the caller.", "basis": "observed", "evidence_refs": ["EV-007"], "rationale": "Credential issuance path.", "related_refs": [], "source_ref": "EP-004", "target_ref": "AC-002", "data_refs": ["D-004"], "boundary_refs": ["B-001"], "gap_refs": [] }
+      ],
+      "entry_points": [
+        { "id": "EP-001", "kind": "entry_point", "description": "POST /auth/register (public).", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated write entry point.", "related_refs": [] },
+        { "id": "EP-003", "kind": "entry_point", "description": "POST /auth/login (public).", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated credential entry point.", "related_refs": [] },
+        { "id": "EP-004", "kind": "entry_point", "description": "POST /auth/login/verify (public).", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated token-issuance entry point.", "related_refs": [] },
+        { "id": "EP-006", "kind": "entry_point", "description": "POST /auth/reset-password (public).", "basis": "observed", "evidence_refs": ["EV-003"], "rationale": "Unauthenticated credential-change entry point.", "related_refs": [] }
+      ],
+      "states": [
+        { "id": "S-003", "kind": "state", "description": "Account active/inactive flag checked only at sign-in.", "basis": "observed", "evidence_refs": ["EV-016", "EV-007"], "rationale": "Lifecycle state relevant to token validity.", "related_refs": [] }
+      ],
+      "dependencies": [
+        { "id": "DEP-001", "kind": "dependency", "description": "PostgreSQL (tenant data store, RLS).", "basis": "observed", "evidence_refs": ["EV-020"], "rationale": "External data dependency.", "related_refs": [], "source_ref": "Z-002", "target_ref": "Z-003", "gap_refs": [] },
+        { "id": "DEP-002", "kind": "dependency", "description": "Redis (OTP state, rate limits, BullMQ).", "basis": "observed", "evidence_refs": ["EV-002"], "rationale": "External state dependency.", "related_refs": [], "source_ref": "Z-002", "target_ref": null, "gap_refs": ["G-005"] }
+      ]
+    },
+    "methods": [],
+    "threats": [],
+    "controls": [],
+    "requirements": [],
+    "risks": [],
+    "attack_trees": [],
+    "attack_paths": [],
+    "visualizations": [],
+    "coverage": [
+      { "id": "CV-001", "target_ref": null, "method_ref": null, "lens": "architecture-primary", "status": "assessed", "reason": "Primary architecture is api: the dominant boundary and lifecycle are HTTP request admission and per-request authorization in a REST service (EV-001, EV-003, EV-024), not component count. Evidence IDs: EV-001, EV-003, EV-024." },
+      { "id": "CV-002", "target_ref": null, "method_ref": null, "lens": "architecture-secondary:multi-tenant-saas", "status": "assessed", "reason": "Bounded secondary: the tenant-to-tenant isolation boundary B-006 inside PostgreSQL (EV-020) adds a distinct boundary (tenant identity, RLS context, cross-tenant reads) not covered by request admission alone. Bounded to the tenant separation subsystem; excludes the HTTP admission path already owned by api." },
+      { "id": "CV-003", "target_ref": null, "method_ref": null, "lens": "architecture-availability:api", "status": "assessed", "reason": "Observed runnable prompt body read from the library: quick/api.md (frontmatter id quick/api, title Quick API Threat Analysis). Full body inspected in this run; no library revision read." },
+      { "id": "CV-004", "target_ref": null, "method_ref": null, "lens": "architecture-availability:multi-tenant-saas", "status": "assessed", "reason": "Observed runnable prompt body read from the library: quick/multi-tenant-saas.md (frontmatter id quick/multi-tenant-saas). Full body inspected in this run; no library revision read." },
+      { "id": "CV-005", "target_ref": null, "method_ref": null, "lens": "selection-effort", "status": "partial", "reason": "Quick baseline over the supplied bundle is sufficient for this selection. A bounded deeper follow-up would need: (1) the RLS policy SQL to make B-006 enforcement observed, (2) a runnable instance for the runtime confirmation in G-001. Evidence prerequisites are prerequisites, not duration guarantees." },
+      { "id": "CV-006", "target_ref": null, "method_ref": null, "lens": "handoff:evidence", "status": "assessed", "reason": "Evidence collection recorded in SYSTEM_UNDER_REVIEW.md with an inspection ledger; 7 representative evidence records carried into this selection." },
+      { "id": "CV-007", "target_ref": null, "method_ref": null, "lens": "handoff:inputs", "status": "assessed", "reason": "Input inventory present: one processed input (the bundle) and two unprocessed inputs." },
+      { "id": "CV-008", "target_ref": null, "method_ref": null, "lens": "handoff:system", "status": "assessed", "reason": "System collections populated with the minimum elements, boundaries and flows needed to review the selection." },
+      { "id": "CV-009", "target_ref": null, "method_ref": null, "lens": "handoff:threats", "status": "not_assessed", "reason": "Selection does not analyze threats; the quick analysis performs that work." },
+      { "id": "CV-010", "target_ref": null, "method_ref": null, "lens": "handoff:treatments", "status": "not_assessed", "reason": "Selection proposes no treatments." },
+      { "id": "CV-011", "target_ref": null, "method_ref": null, "lens": "handoff:verification", "status": "not_assessed", "reason": "Selection defines no verification." }
+    ],
+    "conflicts": [],
+    "gaps": [
+      { "id": "G-006", "kind": "topology", "description": "B-006 tenant isolation rests on RLS set_config (EV-020), but the rls-policies.sql that reads those settings was not inspected, so the boundary's enforcement is inferred.", "needed": "prisma/rls-policies.sql (or equivalent) showing current_setting() usage for the app.* variables.", "affected_refs": ["B-006"], "status": "open", "evidence_refs": ["EV-020"] },
+      { "id": "G-005", "kind": "evidence", "description": "The Redis/BullMQ dependency endpoint was not located in the inspected files.", "needed": "src/core/redis/ and src/common/events/ sources.", "affected_refs": ["DEP-002"], "status": "open", "evidence_refs": ["EV-002"] }
+    ],
+    "treatments": [],
+    "verification": [],
+    "decisions": [],
+    "changes": [],
+    "identity_map": []
+  }
+}

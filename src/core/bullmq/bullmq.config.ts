@@ -1,1 +1,1 @@
-export type { BullMQQueueConfig } from './bullmq-queue-config.interface';
+export type { IBullMQQueueConfig } from '@/shared/interfaces/bullmq';
