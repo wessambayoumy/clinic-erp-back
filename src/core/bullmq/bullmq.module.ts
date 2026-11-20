@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
+import { BullModule, type BullRootModuleOptions } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { ConfigConsts } from '@/shared';
 
@@ -8,9 +8,11 @@ import { ConfigConsts } from '@/shared';
   imports: [
     BullModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService): BullRootModuleOptions => ({
         connection: {
-          url: configService.getOrThrow<string>(ConfigConsts.redis.url),
+          url: configService.getOrThrow<string>(
+            ConfigConsts.bullmq.connectionString,
+          ),
           maxRetriesPerRequest: null,
         },
       }),

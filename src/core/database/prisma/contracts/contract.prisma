@@ -137,6 +137,37 @@ model User {
   @@map("users")
 }
 
+/// Persisted domain events waiting for in-process publication.
+model OutboxEvent {
+  id            Uuid              @id @default(uuid())
+  aggregateId   String
+  aggregateType String
+  eventType     String
+  data          Json
+  metadata      Json
+  attempts      Int               @default(0)
+  createdAt     TimestamptzString @default(now())
+  lockedAt      TimestamptzString?
+  publishedAt   TimestamptzString?
+
+  @@index([publishedAt, lockedAt, createdAt])
+  @@map("outbox_events")
+}
+
+/// Hashed refresh tokens retained for revocation and scheduled cleanup.
+model RefreshToken {
+  id        Uuid              @id @default(uuid())
+  userId    Uuid
+  tokenHash String            @unique
+  expiresAt TimestamptzString
+  revokedAt TimestamptzString?
+  createdAt TimestamptzString @default(now())
+
+  @@index([expiresAt])
+  @@index([revokedAt])
+  @@map("refresh_tokens")
+}
+
 /// Patient Chart Management (Proposal §4.1): longitudinal record, allergies,
 /// medications, history, documents. Duplicate detection is a flag, not a hard merge,
 /// so downstream data isn't silently reassigned.

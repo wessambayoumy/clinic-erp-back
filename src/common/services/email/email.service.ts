@@ -48,7 +48,7 @@ export class EmailService {
     if (!(await this.otpCache.allowRequest(purpose, accountSubject))) {
       throw new HttpException(
         'Too many email code requests. Please try again later.',
-        HttpStatus.TOO_MANY_REQUESTS,
+        429
       );
     }
 

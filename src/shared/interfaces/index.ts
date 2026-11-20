@@ -2,6 +2,7 @@ export * from './auth';
 export * from './authorization';
 export * from './bullmq';
 export * from './database';
+export * from './dicom';
 export * from './email';
 export * from './events';
 export * from './health';

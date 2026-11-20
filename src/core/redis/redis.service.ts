@@ -1,50 +1,77 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient, RedisClientType } from 'redis';
+import Redis from 'ioredis';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
 import { ConfigConsts } from '@/shared/constants/config';
 
+/** Owns the application's shared ioredis connection. */
 @Injectable()
-export class RedisService implements OnModuleInit {
-  public client?: RedisClientType;
-  isConnected = false;
+export class RedisService implements OnModuleInit, OnModuleDestroy {
+  public client?: Redis;
+  public isConnected = false;
 
+  /**
+   * Creates the Redis service.
+   * @param configService Application configuration.
+   * @param logger Structured application logger.
+   */
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
   ) {}
 
-  getClient(): RedisClientType | undefined {
+  /** Returns the shared Redis client when it has been initialized. */
+  public getClient(): Redis | undefined {
     return this.client;
   }
 
-  async onModuleInit(): Promise<void> {
+  /** Connects to Redis during module initialization. */
+  public async onModuleInit(): Promise<void> {
     const redisUrl = this.configService.getOrThrow<string>(
       ConfigConsts.redis.url,
     );
 
-    if (!redisUrl)
-      this.logger.warn('Redis URL not configured, Redis service disabled');
-
     try {
-      this.client = createClient({ url: redisUrl }) as RedisClientType;
+      this.client = new Redis(redisUrl, { lazyConnect: true });
 
-      this.client.on('error', (err: Error) => {
+      this.client.on('error', (err: Error): void => {
         this.logger.error(`Redis error: ${err.message}`);
       });
 
-      this.client.on('connect', () => {
+      this.client.on('ready', (): void => {
         this.isConnected = true;
+      });
+
+      this.client.on('close', (): void => {
+        this.isConnected = false;
       });
 
       await this.client.connect();
       this.logger.log('Redis connection successfully established');
-    } catch (error) {
+    } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(
         `Redis connection failed (${message}), operating in degraded mode`,
       );
       this.isConnected = false;
+    }
+  }
+
+  /** Closes the Redis connection during module shutdown. */
+  public async onModuleDestroy(): Promise<void> {
+    if (!this.client || this.client.status === 'end') return;
+
+    try {
+      await this.client.quit();
+      this.isConnected = false;
+    } catch (error: unknown) {
+      this.logger.warn(
+        `Redis shutdown failed (${error instanceof Error ? error.message : String(error)})`,
+      );
     }
   }
 }

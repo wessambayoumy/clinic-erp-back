@@ -32,6 +32,11 @@ export const envSchema = z.object({
   EMAIL_OTP_HASH_SECRET: z.string().min(32),
   EMAIL_CODE_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(10).default(5),
   EMAIL_REQUEST_LIMIT_PER_HOUR: z.coerce.number().int().min(1).default(5),
+
+  // DICOMweb PACS integration
+  DICOM_WEB_BASE_URL: z.string().url(),
+  DICOM_AUTH_TOKEN: z.string().optional(),
+  DICOM_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
 }).superRefine((config, context) => {
   if (config.MAIL_TRANSPORT === 'smtp' && !config.SMTP_URL) {
     context.addIssue({
