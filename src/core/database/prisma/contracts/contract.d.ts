@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'8f826821693adee7282ae80e3c69ddd3f108efa34dd3c98ca227a651391ca7bc'>;
+  StorageHashBase<'61ba028988923d4cf85a222dbf5145066cf4bf22d439bbdb753f4d9bb677d5f5'>;
 export type ExecutionHash =
-  ExecutionHashBase<'4f3114336aa8ba760ac68262c52aecc46158dc1dcfa338386e392ae87f2b37bd'>;
+  ExecutionHashBase<'6f19d4eb55e8d581164a652207c77c11e8b05eaab3ccfc00b3b902e78119e410'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -513,6 +513,18 @@ export type FieldOutputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly deletedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
+    readonly OutboxEvent: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly aggregateId: CodecTypes['pg/text@1']['output'];
+      readonly aggregateType: CodecTypes['pg/text@1']['output'];
+      readonly eventType: CodecTypes['pg/text@1']['output'];
+      readonly data: CodecTypes['pg/json@1']['output'];
+      readonly metadata: CodecTypes['pg/json@1']['output'];
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly lockedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly publishedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
     readonly Patient: {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
@@ -617,6 +629,14 @@ export type FieldOutputTypes = {
       readonly effectiveTo: CodecTypes['pg/date-string@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly RefreshToken: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly userId: CodecTypes['pg/uuid@1']['output'];
+      readonly tokenHash: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
     readonly Resource: {
       readonly id: CodecTypes['pg/uuid@1']['output'];
@@ -941,6 +961,18 @@ export type FieldInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly deletedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
+    readonly OutboxEvent: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly aggregateId: CodecTypes['pg/text@1']['input'];
+      readonly aggregateType: CodecTypes['pg/text@1']['input'];
+      readonly eventType: CodecTypes['pg/text@1']['input'];
+      readonly data: CodecTypes['pg/json@1']['input'];
+      readonly metadata: CodecTypes['pg/json@1']['input'];
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly lockedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly publishedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+    };
     readonly Patient: {
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
@@ -1045,6 +1077,14 @@ export type FieldInputTypes = {
       readonly effectiveTo: CodecTypes['pg/date-string@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly RefreshToken: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly userId: CodecTypes['pg/uuid@1']['input'];
+      readonly tokenHash: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly Resource: {
       readonly id: CodecTypes['pg/uuid@1']['input'];
@@ -1369,6 +1409,18 @@ export type StorageColumnTypes = {
       readonly timezone: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly outbox_events: {
+      readonly aggregateId: CodecTypes['pg/text@1']['output'];
+      readonly aggregateType: CodecTypes['pg/text@1']['output'];
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly data: CodecTypes['pg/json@1']['output'];
+      readonly eventType: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly lockedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly metadata: CodecTypes['pg/json@1']['output'];
+      readonly publishedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
     readonly patient_allergies: {
       readonly allergen: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -1472,6 +1524,14 @@ export type StorageColumnTypes = {
         | 'ADMIN_STAFF'
         | 'OTHER';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly userId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly refresh_tokens: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly tokenHash: CodecTypes['pg/text@1']['output'];
       readonly userId: CodecTypes['pg/uuid@1']['output'];
     };
     readonly resource_bookings: {
@@ -1797,6 +1857,18 @@ export type StorageColumnInputTypes = {
       readonly timezone: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
+    readonly outbox_events: {
+      readonly aggregateId: CodecTypes['pg/text@1']['input'];
+      readonly aggregateType: CodecTypes['pg/text@1']['input'];
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly data: CodecTypes['pg/json@1']['input'];
+      readonly eventType: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly lockedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly metadata: CodecTypes['pg/json@1']['input'];
+      readonly publishedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+    };
     readonly patient_allergies: {
       readonly allergen: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -1900,6 +1972,14 @@ export type StorageColumnInputTypes = {
         | 'ADMIN_STAFF'
         | 'OTHER';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly userId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly refresh_tokens: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly tokenHash: CodecTypes['pg/text@1']['input'];
       readonly userId: CodecTypes['pg/uuid@1']['input'];
     };
     readonly resource_bookings: {
@@ -3597,6 +3677,76 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly outbox_events: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly aggregateId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly aggregateType: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly eventType: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly data: {
+                  readonly nativeType: 'json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                };
+                readonly metadata: {
+                  readonly nativeType: 'json';
+                  readonly codecId: 'pg/json@1';
+                  readonly nullable: false;
+                };
+                readonly attempts: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly lockedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly publishedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'outbox_events_publishedAt_lockedAt_createdAt_idx_352cbf58';
+                  readonly prefix: 'outbox_events_publishedAt_lockedAt_createdAt_idx';
+                  readonly columns: readonly ['publishedAt', 'lockedAt', 'createdAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [];
+            };
             readonly patient_allergies: {
               columns: {
                 readonly id: {
@@ -4302,6 +4452,58 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly refresh_tokens: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly userId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly tokenHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly revokedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['tokenHash'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'refresh_tokens_expiresAt_idx_6b6b8c10';
+                  readonly prefix: 'refresh_tokens_expiresAt_idx';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'refresh_tokens_revokedAt_idx_f1d8e6b3';
+                  readonly prefix: 'refresh_tokens_revokedAt_idx';
+                  readonly columns: readonly ['revokedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [];
+            };
             readonly resource_bookings: {
               columns: {
                 readonly id: {
@@ -4761,6 +4963,14 @@ type ContractBase = Omit<
     };
     readonly providers: { readonly namespace: 'public' & NamespaceId; readonly model: 'Provider' };
     readonly users: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+    readonly outbox_events: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'OutboxEvent';
+    };
+    readonly refresh_tokens: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RefreshToken';
+    };
     readonly patients: { readonly namespace: 'public' & NamespaceId; readonly model: 'Patient' };
     readonly patient_allergies: {
       readonly namespace: 'public' & NamespaceId;
@@ -6528,6 +6738,76 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly OutboxEvent: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly aggregateId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly aggregateType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly eventType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly data: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly metadata: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/json@1' };
+              };
+              readonly attempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly lockedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly publishedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'outbox_events';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly aggregateId: { readonly column: 'aggregateId' };
+                readonly aggregateType: { readonly column: 'aggregateType' };
+                readonly eventType: { readonly column: 'eventType' };
+                readonly data: { readonly column: 'data' };
+                readonly metadata: { readonly column: 'metadata' };
+                readonly attempts: { readonly column: 'attempts' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly lockedAt: { readonly column: 'lockedAt' };
+                readonly publishedAt: { readonly column: 'publishedAt' };
+              };
+            };
+          };
           readonly Patient: {
             readonly fields: {
               readonly id: {
@@ -7220,6 +7500,56 @@ type ContractBase = Omit<
                 readonly effectiveTo: { readonly column: 'effectiveTo' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly RefreshToken: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly tokenHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly revokedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'refresh_tokens';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly tokenHash: { readonly column: 'tokenHash' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly revokedAt: { readonly column: 'revokedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
               };
             };
           };
@@ -7992,6 +8322,14 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'public';
+            readonly table: 'outbox_events';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
             readonly table: 'patient_allergies';
             readonly column: 'id';
           };
@@ -8098,6 +8436,14 @@ type ContractBase = Omit<
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
           readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'refresh_tokens';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
         },
         {
           readonly ref: {

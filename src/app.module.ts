@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { minutes, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -28,6 +30,8 @@ import { CommonModules } from './common/common.modules';
   imports: [
     // Global configuration must be loaded first
     ConfigurationModule,
+    EventEmitterModule.forRoot({ global: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: minutes(1),

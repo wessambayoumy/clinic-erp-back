@@ -3,6 +3,7 @@ export * from './billing';
 export * from './bullmq';
 export * from './clinical-workflows';
 export * from './config';
+export * from './dicom';
 export * from './email';
 export * from './encounters';
 export * from './http';

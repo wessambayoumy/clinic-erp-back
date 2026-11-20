@@ -1,6 +1,6 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { RedisClientType } from 'redis';
+import type Redis from 'ioredis';
 
 import { ConfigConsts } from '@/shared/constants/config';
 import { RedisService } from '@/core/redis/redis.service';
@@ -54,10 +54,8 @@ export class OtpCacheService {
 
     await client
       .multi()
-      .set(otpKey, digest, { expiration: { type: 'EX', value: OTP_TTL_SECONDS } })
-      .set(attemptsKey, '0', {
-        expiration: { type: 'EX', value: OTP_TTL_SECONDS },
-      })
+      .set(otpKey, digest, 'EX', OTP_TTL_SECONDS)
+      .set(attemptsKey, '0', 'EX', OTP_TTL_SECONDS)
       .exec();
   }
 
@@ -71,10 +69,7 @@ export class OtpCacheService {
     const limit = this.configService.getOrThrow<number>(
       ConfigConsts.email.requestLimitPerHour,
     );
-    const result = await client.eval(RATE_LIMIT_SCRIPT, {
-      keys: [key],
-      arguments: ['3600', String(limit)],
-    });
+    const result = await client.eval(RATE_LIMIT_SCRIPT, 1, key, '3600', String(limit));
 
     return Number(result) === 1;
   }
@@ -91,10 +86,14 @@ export class OtpCacheService {
     const maxAttempts = this.configService.getOrThrow<number>(
       ConfigConsts.email.codeMaxAttempts,
     );
-    const storedDigest = await client.eval(BEGIN_VERIFY_SCRIPT, {
-      keys: [otpKey, attemptsKey],
-      arguments: [String(OTP_TTL_SECONDS), String(maxAttempts)],
-    });
+    const storedDigest = await client.eval(
+      BEGIN_VERIFY_SCRIPT,
+      2,
+      otpKey,
+      attemptsKey,
+      String(OTP_TTL_SECONDS),
+      String(maxAttempts),
+    );
 
     if (storedDigest === 0) return OtpCacheOutcomeEnum.EXPIRED;
     if (storedDigest === -1) return OtpCacheOutcomeEnum.LOCKED;
@@ -111,10 +110,13 @@ export class OtpCacheService {
 
     if (!matches) return OtpCacheOutcomeEnum.INVALID;
 
-    const consumed = await client.eval(CONSUME_SCRIPT, {
-      keys: [otpKey, attemptsKey],
-      arguments: [storedDigest],
-    });
+    const consumed = await client.eval(
+      CONSUME_SCRIPT,
+      2,
+      otpKey,
+      attemptsKey,
+      storedDigest,
+    );
 
     return Number(consumed) === 1
       ? OtpCacheOutcomeEnum.VERIFIED
@@ -128,7 +130,7 @@ export class OtpCacheService {
     challengeId: string,
   ): Promise<void> {
     const client = this.requireClient();
-    await client.del(this.keys(purpose, subject, challengeId));
+    await client.del(...this.keys(purpose, subject, challengeId));
   }
 
   private keys(
@@ -142,10 +144,10 @@ export class OtpCacheService {
     return [challengeKey, `${challengeKey}:attempts`];
   }
 
-  private requireClient(): RedisClientType {
+  private requireClient(): Redis {
     const client = this.redis.getClient();
 
-    if (!client?.isReady) {
+    if (client?.status !== 'ready') {
       throw new ServiceUnavailableException('OTP service is temporarily unavailable');
     }
 

@@ -3,6 +3,7 @@ export * from './modules/auth/authorization.module';
 export * from './database';
 export * from './decorators';
 export * from './events';
+export * from './exceptions';
 export * from './filters';
 export * from './guards';
 export * from './health';
