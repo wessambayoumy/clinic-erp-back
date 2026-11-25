@@ -22,11 +22,7 @@ import {
 } from '@/core/external/email/templates';
 import { EmailOtpPurposeEnum } from '@/shared/enums/auth';
 import { LoggerService } from '@/common/modules/observability/logging/logger.service';
-import {
-  OTP_TTL_SECONDS,
-  OtpCacheService,
-  OtpCredentialService,
-} from './otp';
+import { OTP_TTL_SECONDS, OtpCacheService, OtpCredentialService } from './otp';
 
 /** Sends account emails and coordinates Redis-backed one-time codes. */
 @Injectable()
@@ -48,7 +44,7 @@ export class EmailService {
     if (!(await this.otpCache.allowRequest(purpose, accountSubject))) {
       throw new HttpException(
         'Too many email code requests. Please try again later.',
-        429
+        429,
       );
     }
 
@@ -105,12 +101,7 @@ export class EmailService {
     code: string,
     accountSubject: string,
   ): Promise<OtpCacheOutcomeEnum> {
-    return this.otpCache.verify(
-      purpose,
-      accountSubject,
-      challengeId,
-      code,
-    );
+    return this.otpCache.verify(purpose, accountSubject, challengeId, code);
   }
 
   /** Sends a non-critical security notice after a successful sign-in. */

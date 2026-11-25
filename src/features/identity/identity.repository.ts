@@ -47,7 +47,9 @@ export class IdentityRepository {
     organizationId: string,
     password: string,
   ): Promise<unknown> {
-    return tx.orm.public.User.where({ id, organizationId }).update({ password });
+    return tx.orm.public.User.where({ id, organizationId }).update({
+      password,
+    });
   }
 
   /** Finds a clinic location by ID within its owning organization. */

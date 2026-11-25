@@ -29,13 +29,17 @@ import { S3_CLIENT } from '@/shared/constants/storage';
         new S3Client({
           region: configService.get<string>('AWS_REGION'),
           endpoint: configService.get<string>('AWS_S3_ENDPOINT'),
-          forcePathStyle: configService.get<string>('AWS_S3_FORCE_PATH_STYLE') === 'true',
+          forcePathStyle:
+            configService.get<string>('AWS_S3_FORCE_PATH_STYLE') === 'true',
           credentials:
             configService.get<string>('AWS_ACCESS_KEY_ID') !== undefined &&
             configService.get<string>('AWS_SECRET_ACCESS_KEY') !== undefined
               ? {
-                  accessKeyId: configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
-                  secretAccessKey: configService.getOrThrow<string>('AWS_SECRET_ACCESS_KEY'),
+                  accessKeyId:
+                    configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
+                  secretAccessKey: configService.getOrThrow<string>(
+                    'AWS_SECRET_ACCESS_KEY',
+                  ),
                 }
               : undefined,
         }),

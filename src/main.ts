@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { LoggerService } from './common/modules/observability/logging/logger.service.js';
 import { AppModule } from './app.module.js';
 import { ConfigConsts } from '@/shared/constants/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 /** Configures and starts the Fastify HTTP server. */
 async function bootstrap(): Promise<void> {
@@ -20,14 +21,31 @@ async function bootstrap(): Promise<void> {
     new FastifyAdapter(),
   );
 
+  if (process.env.NODE_ENV === 'development') {
+    const metadataPath = './metadata.js';
+    const { default: metadata } = (await import(metadataPath)) as {
+      default: () => Promise<Record<string, unknown>>;
+    };
+    await SwaggerModule.loadPluginMetadata(metadata);
+    SwaggerModule.setup(
+      'api/docs',
+      app,
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder()
+          .setTitle('Clinic ERP API')
+          .setVersion('1.0')
+          .addBearerAuth()
+          .build(),
+      ),
+    );
+  }
   const configService = app.get(ConfigService);
   const loggerService = app.get(LoggerService);
   app.useLogger(loggerService);
 
   const httpAdapterHost = app.get(HttpAdapterHost);
-  app.useGlobalFilters(
-    new AllExceptionsFilter(httpAdapterHost, loggerService),
-  );
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost, loggerService));
 
   const port = configService.getOrThrow<number>(ConfigConsts.app.port);
   const apiPrefix = configService.getOrThrow<string>(

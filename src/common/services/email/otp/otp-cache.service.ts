@@ -69,7 +69,13 @@ export class OtpCacheService {
     const limit = this.configService.getOrThrow<number>(
       ConfigConsts.email.requestLimitPerHour,
     );
-    const result = await client.eval(RATE_LIMIT_SCRIPT, 1, key, '3600', String(limit));
+    const result = await client.eval(
+      RATE_LIMIT_SCRIPT,
+      1,
+      key,
+      '3600',
+      String(limit),
+    );
 
     return Number(result) === 1;
   }
@@ -98,7 +104,9 @@ export class OtpCacheService {
     if (storedDigest === 0) return OtpCacheOutcomeEnum.EXPIRED;
     if (storedDigest === -1) return OtpCacheOutcomeEnum.LOCKED;
     if (typeof storedDigest !== 'string') {
-      throw new ServiceUnavailableException('OTP service is temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'OTP service is temporarily unavailable',
+      );
     }
 
     const matches = await this.credentials.verify(
@@ -148,7 +156,9 @@ export class OtpCacheService {
     const client = this.redis.getClient();
 
     if (client?.status !== 'ready') {
-      throw new ServiceUnavailableException('OTP service is temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'OTP service is temporarily unavailable',
+      );
     }
 
     return client;

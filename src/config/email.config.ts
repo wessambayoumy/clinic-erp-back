@@ -8,7 +8,5 @@ export default registerAs(ConfigEnum.email, () => ({
   smtpUrl: process.env.SMTP_URL,
   otpHashSecret: process.env.EMAIL_OTP_HASH_SECRET,
   codeMaxAttempts: Number(process.env.EMAIL_CODE_MAX_ATTEMPTS ?? 5),
-  requestLimitPerHour: Number(
-    process.env.EMAIL_REQUEST_LIMIT_PER_HOUR ?? 5,
-  ),
+  requestLimitPerHour: Number(process.env.EMAIL_REQUEST_LIMIT_PER_HOUR ?? 5),
 }));

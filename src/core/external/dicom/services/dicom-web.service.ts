@@ -33,8 +33,11 @@ export class DicomWebService {
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
   ) {
-    this.baseUrl = this.configService.getOrThrow<string>('DICOM_WEB_BASE_URL').replace(/\/+$/, '');
-    this.timeoutMs = this.configService.get<number>('DICOM_TIMEOUT_MS') ?? 15000;
+    this.baseUrl = this.configService
+      .getOrThrow<string>('DICOM_WEB_BASE_URL')
+      .replace(/\/+$/, '');
+    this.timeoutMs =
+      this.configService.get<number>('DICOM_TIMEOUT_MS') ?? 15000;
     const token = this.configService.get<string>('DICOM_AUTH_TOKEN');
     this.authHeader = token ? `Bearer ${token}` : null;
   }
@@ -44,7 +47,9 @@ export class DicomWebService {
    * @param options Pagination and filter parameters.
    * @returns Matching DICOM studies.
    */
-  public async searchStudies(options: IDicomQueryOptions): Promise<IDicomStudy[]> {
+  public async searchStudies(
+    options: IDicomQueryOptions,
+  ): Promise<IDicomStudy[]> {
     const params = new URLSearchParams({
       limit: String(options.limit),
       offset: String(options.offset),
@@ -53,9 +58,13 @@ export class DicomWebService {
     if (options.studyDate) params.set('StudyDate', options.studyDate);
     if (options.modality) params.set('ModalitiesInStudy', options.modality);
 
-    const response = await this.request('QIDO-RS searchStudies', `${this.baseUrl}/studies?${params.toString()}`, {
-      headers: { Accept: 'application/dicom+json' },
-    });
+    const response = await this.request(
+      'QIDO-RS searchStudies',
+      `${this.baseUrl}/studies?${params.toString()}`,
+      {
+        headers: { Accept: 'application/dicom+json' },
+      },
+    );
 
     if (response.status === 204) {
       return [];
@@ -92,7 +101,10 @@ export class DicomWebService {
    */
   public async storeInstance(buffer: Buffer): Promise<void> {
     const boundary = `dicom-boundary-${Date.now()}`;
-    const header = Buffer.from(`--${boundary}\r\nContent-Type: application/dicom\r\n\r\n`, 'utf8');
+    const header = Buffer.from(
+      `--${boundary}\r\nContent-Type: application/dicom\r\n\r\n`,
+      'utf8',
+    );
     const footer = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf8');
     const body = Buffer.concat([header, buffer, footer]);
 
@@ -106,7 +118,11 @@ export class DicomWebService {
     });
   }
 
-  private async request(operation: string, url: string, init: RequestInit): Promise<Response> {
+  private async request(
+    operation: string,
+    url: string,
+    init: RequestInit,
+  ): Promise<Response> {
     const headers = new Headers(init.headers);
     if (this.authHeader) {
       headers.set('Authorization', this.authHeader);
@@ -120,7 +136,10 @@ export class DicomWebService {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (error: unknown) {
-      this.logger.error(`DICOMweb request error during ${operation}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `DICOMweb request error during ${operation}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new DicomPacsConnectionException(operation);
     }
 
@@ -136,8 +155,10 @@ export class DicomWebService {
 
   private mapStudyRecord(record: DicomJsonRecordType): IDicomStudy {
     const map = new Map(Object.entries(record));
-    const readStr = (tag: string): string => String(map.get(tag)?.Value?.[0] ?? '');
-    const readNum = (tag: string): number => Number(map.get(tag)?.Value?.[0] ?? 0);
+    const readStr = (tag: string): string =>
+      String(map.get(tag)?.Value?.[0] ?? '');
+    const readNum = (tag: string): number =>
+      Number(map.get(tag)?.Value?.[0] ?? 0);
     const rawModalities = map.get('00080061')?.Value ?? [];
     const allowed = Object.values(DicomModalityEnum) as string[];
 

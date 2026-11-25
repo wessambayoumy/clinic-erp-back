@@ -6,7 +6,18 @@ import type { IDicomParsedMetadata } from '@/shared/interfaces';
 
 const DICOM_PREAMBLE_BYTES = 128;
 const DICOM_MAGIC = 'DICM';
-const LONG_VR_SET = new Set(['OB', 'OD', 'OF', 'OL', 'OW', 'SQ', 'UC', 'UN', 'UR', 'UT']);
+const LONG_VR_SET = new Set([
+  'OB',
+  'OD',
+  'OF',
+  'OL',
+  'OW',
+  'SQ',
+  'UC',
+  'UN',
+  'UR',
+  'UT',
+]);
 
 /**
  * Parses and validates DICOM Part 10 binary buffers.
@@ -23,7 +34,9 @@ export class DicomParserService {
       throw new DicomParseException('File is smaller than DICOM preamble');
     }
 
-    const magic = buffer.subarray(DICOM_PREAMBLE_BYTES, DICOM_PREAMBLE_BYTES + 4).toString('ascii');
+    const magic = buffer
+      .subarray(DICOM_PREAMBLE_BYTES, DICOM_PREAMBLE_BYTES + 4)
+      .toString('ascii');
     if (magic !== DICOM_MAGIC) {
       throw new DicomParseException('Missing DICM magic header');
     }
@@ -34,7 +47,9 @@ export class DicomParserService {
     const sopInstanceUid = tags.get('00080018') ?? '';
 
     if (!studyInstanceUid || !sopInstanceUid) {
-      throw new DicomParseException('Missing required StudyInstanceUID or SOPInstanceUID');
+      throw new DicomParseException(
+        'Missing required StudyInstanceUID or SOPInstanceUID',
+      );
     }
 
     return {
@@ -50,7 +65,10 @@ export class DicomParserService {
     };
   }
 
-  private extractTags(buffer: Buffer, startOffset: number): Map<string, string> {
+  private extractTags(
+    buffer: Buffer,
+    startOffset: number,
+  ): Map<string, string> {
     const tags = new Map<string, string>();
     let offset = startOffset;
 
@@ -67,8 +85,13 @@ export class DicomParserService {
         break;
       }
 
-      const key = `${group.toString(16).padStart(4, '0')}${element.toString(16).padStart(4, '0')}`.toUpperCase();
-      const rawValue = buffer.subarray(header.dataStart, header.dataStart + header.length).toString('utf8').replace(/\0/g, '').trim();
+      const key =
+        `${group.toString(16).padStart(4, '0')}${element.toString(16).padStart(4, '0')}`.toUpperCase();
+      const rawValue = buffer
+        .subarray(header.dataStart, header.dataStart + header.length)
+        .toString('utf8')
+        .replace(/\0/g, '')
+        .trim();
       tags.set(key, rawValue);
       offset = header.dataStart + header.length;
     }
@@ -83,7 +106,9 @@ export class DicomParserService {
   ): { dataStart: number; length: number } | null {
     if (!/^[A-Z]{2}$/.test(vr)) {
       const implicitLength = buffer.readUInt32LE(offset + 4);
-      return implicitLength === 0xffffffff ? null : { dataStart: offset + 8, length: implicitLength };
+      return implicitLength === 0xffffffff
+        ? null
+        : { dataStart: offset + 8, length: implicitLength };
     }
 
     if (LONG_VR_SET.has(vr)) {
@@ -91,7 +116,9 @@ export class DicomParserService {
         return null;
       }
       const longLength = buffer.readUInt32LE(offset + 8);
-      return longLength === 0xffffffff ? null : { dataStart: offset + 12, length: longLength };
+      return longLength === 0xffffffff
+        ? null
+        : { dataStart: offset + 12, length: longLength };
     }
 
     const shortLength = buffer.readUInt16LE(offset + 6);
@@ -101,6 +128,8 @@ export class DicomParserService {
   private resolveModality(raw?: string): DicomModalityEnum {
     const normalized = (raw ?? '').trim().toUpperCase();
     const values = Object.values(DicomModalityEnum) as string[];
-    return values.includes(normalized) ? (normalized as DicomModalityEnum) : DicomModalityEnum.OT;
+    return values.includes(normalized)
+      ? (normalized as DicomModalityEnum)
+      : DicomModalityEnum.OT;
   }
 }

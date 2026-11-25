@@ -37,11 +37,16 @@ export class DicomService {
    * @param encounterId Optional encounter ID to link the study.
    * @returns Extracted DICOM metadata.
    */
-  public async ingestFile(buffer: Buffer, encounterId?: string): Promise<IDicomParsedMetadata> {
+  public async ingestFile(
+    buffer: Buffer,
+    encounterId?: string,
+  ): Promise<IDicomParsedMetadata> {
     const metadata = this.parserService.parse(buffer);
     await this.dicomWebService.storeInstance(buffer);
 
-    this.logger.log(`Ingested DICOM study ${metadata.studyInstanceUid} (${metadata.modality})`);
+    this.logger.log(
+      `Ingested DICOM study ${metadata.studyInstanceUid} (${metadata.modality})`,
+    );
     await this.eventEmitter.emitAsync(
       'dicom.study.ingested',
       new DicomStudyIngestedEvent(metadata, encounterId),
@@ -55,7 +60,9 @@ export class DicomService {
    * @param options Query filters and pagination bounds.
    * @returns Matching studies.
    */
-  public async searchStudies(options: IDicomQueryOptions): Promise<IDicomStudy[]> {
+  public async searchStudies(
+    options: IDicomQueryOptions,
+  ): Promise<IDicomStudy[]> {
     return this.dicomWebService.searchStudies(options);
   }
 
@@ -71,7 +78,11 @@ export class DicomService {
     seriesUid: string,
     sopUid: string,
   ): Promise<StreamableFile> {
-    const jpegBuffer = await this.dicomWebService.retrieveRenderedInstance(studyUid, seriesUid, sopUid);
+    const jpegBuffer = await this.dicomWebService.retrieveRenderedInstance(
+      studyUid,
+      seriesUid,
+      sopUid,
+    );
     return new StreamableFile(jpegBuffer, { type: 'image/jpeg' });
   }
 }

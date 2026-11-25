@@ -1,3 +1,6 @@
+export * from './storage-object.interface';
+export * from './storage-upload-input.interface';
+export * from './storage-upload-result.interface';
 export * from './file-signature.interface';
 export * from './s3-config.interface';
 export * from './s3-download-result.interface';
@@ -5,5 +8,5 @@ export * from './s3-set-key-options.interface';
 export * from './s3-upload-many-options.interface';
 export * from './s3-upload-one-options.interface';
 export * from './upload-file-options.interface';
-export * from './upload-guard-options.interface';
 export * from './uploaded-file.interface';
+export * from './upload-guard-options.interface';

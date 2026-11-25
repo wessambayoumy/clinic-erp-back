@@ -36,6 +36,9 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# NestJS SWC Swagger auto-generated metadata
+src/metadata.ts
+
 # dotenv environment variable files
 .env.*
 !.env.example

@@ -197,13 +197,14 @@ export default defineConfig(
       ],
 
       // --- Unicorn (dialed back for NestJS idioms) -----------------------
-      'unicorn/prevent-abbreviations': 'off', // conflicts with req/res/dto/ctx conventions
-      'unicorn/filename-case': ['error', { case: 'kebabCase' }], // matches Nest's *.service.ts, *.controller.ts
-      'unicorn/no-null': 'off', // Prisma/DB layers use null intentionally, distinct from undefined
+      'unicorn/prevent-abbreviations': 'off',
+      'unicorn/filename-case': ['error', { case: 'kebabCase' }],
+      'unicorn/no-null': 'off',
       'unicorn/no-array-reduce': 'off',
+      'unicorn/logical-assignment-operators': 'off',
 
       // --- Misc correctness -----------------------------------------------
-      'no-console': ['error', { allow: [] }], // force routing through LoggerService, not raw console.*
+      'no-console': 'error', // force routing through LoggerService, not raw console.*
       eqeqeq: ['error', 'always'],
       'no-return-await': 'off', // superseded by @typescript-eslint/return-await
       '@typescript-eslint/return-await': ['error', 'in-try-catch'],

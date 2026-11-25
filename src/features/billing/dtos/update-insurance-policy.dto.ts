@@ -1,6 +1,5 @@
-import { PartialType } from '@nestjs/mapped-types';
-
 import { CreateInsurancePolicyDto } from './create-insurance-policy.dto';
+import { PartialType } from '@nestjs/swagger';
 
 /**
  * Body for PATCH /patients/:id/insurance/:policyId.

@@ -14,7 +14,14 @@ export class PasswordChangedMail implements Mailable<IPasswordChangedMailData> {
   } {
     return {
       subject: 'Your Clinic ERP password was changed',
-      html: html`<main><h1>Password changed</h1><p>Your Clinic ERP account password changed at ${data.changedAt}.</p><p>If this was not you, contact your organization administrator immediately.</p></main>`,
+      html: html`<main>
+        <h1>Password changed</h1>
+        <p>Your Clinic ERP account password changed at ${data.changedAt}.</p>
+        <p>
+          If this was not you, contact your organization administrator
+          immediately.
+        </p>
+      </main>`,
       text: `Your Clinic ERP account password changed at ${data.changedAt}. If this was not you, contact your organization administrator immediately.`,
     };
   }

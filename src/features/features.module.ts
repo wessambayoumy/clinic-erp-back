@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
 import { AuthModule } from '@features/auth';
 import { IdentityModule } from '@features/identity';
 import { OrganizationModule } from '@features/organization';
@@ -9,15 +9,17 @@ import { ClinicalWorkflowsModule } from '@features/clinical-workflows';
 import { BillingModule } from '@features/billing';
 import { InventoryModule } from '@features/inventory';
 @Module({
-  imports: [AuthModule,
-      IdentityModule,
-      OrganizationModule,
-      PatientsModule,
-      SchedulingModule,
-      EncountersModule,
-      ClinicalWorkflowsModule,
-      BillingModule,
-      InventoryModule,],
+  imports: [
+    AuthModule,
+    IdentityModule,
+    OrganizationModule,
+    PatientsModule,
+    SchedulingModule,
+    EncountersModule,
+    ClinicalWorkflowsModule,
+    BillingModule,
+    InventoryModule,
+  ],
   controllers: [],
   providers: [],
 })

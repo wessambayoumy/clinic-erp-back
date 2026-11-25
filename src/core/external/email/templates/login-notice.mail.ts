@@ -13,7 +13,16 @@ export class LoginNoticeMail implements Mailable<ILoginNoticeMailData> {
   } {
     return {
       subject: 'A sign-in to your Clinic ERP account completed',
-      html: html`<main><h1>Sign-in completed</h1><p>A sign-in to your Clinic ERP account completed at ${data.signedInAt}.</p><p>If this was not you, reset your password and contact your organization administrator.</p></main>`,
+      html: html`<main>
+        <h1>Sign-in completed</h1>
+        <p>
+          A sign-in to your Clinic ERP account completed at ${data.signedInAt}.
+        </p>
+        <p>
+          If this was not you, reset your password and contact your organization
+          administrator.
+        </p>
+      </main>`,
       text: `A sign-in to your Clinic ERP account completed at ${data.signedInAt}. If this was not you, reset your password and contact your organization administrator.`,
     };
   }
